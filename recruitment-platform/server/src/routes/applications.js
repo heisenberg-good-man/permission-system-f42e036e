@@ -14,6 +14,7 @@ const getStatusAction = (status) => {
 }
 
 const STATUS_LABELS = {
+  pending: '待筛选',
   contacted: '已沟通',
   interviewing: '面试中',
   offered: '已发 Offer',

@@ -183,3 +183,15 @@ Re-optimizing dependencies because vite config has changed
 AggregateError [ECONNREFUSED]: 
     at internalConnectMultiple (node:net:1134:18)
     at afterConnectMultiple (node:net:1715:7)
+
+> recruitment-platform-client@1.0.0 dev
+> vite --host 127.0.0.1 --port 3000
+
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m958[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m3000[22m/[39m
+[2m04:39:31[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/applications[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
