@@ -154,9 +154,12 @@ const submitApplication = async () => {
             expectSalary: ''
           }
           fetchApplicationCount()
+        } else {
+          ElMessage.error(res.data.message || '投递失败')
         }
       } catch (error) {
-        ElMessage.error('投递失败')
+        const msg = error.response?.data?.message || '投递失败'
+        ElMessage.error(msg)
       }
     }
   })

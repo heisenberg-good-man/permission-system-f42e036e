@@ -13,6 +13,21 @@ const getStatusAction = (status) => {
 }
 
 router.post('/', (req, res) => {
+  const { jobId, candidateName, phone, email } = req.body
+  const missingFields = []
+  
+  if (!jobId) missingFields.push('职位ID')
+  if (!candidateName || !candidateName.trim()) missingFields.push('姓名')
+  if (!phone || !phone.trim()) missingFields.push('电话')
+  if (!email || !email.trim()) missingFields.push('邮箱')
+  
+  if (missingFields.length > 0) {
+    return res.json({ 
+      code: 400, 
+      message: `以下字段为必填项：${missingFields.join('、')}` 
+    })
+  }
+  
   const job = jobs.find(j => j.id === parseInt(req.body.jobId))
   if (!job) {
     return res.json({ code: 404, message: '职位不存在' })

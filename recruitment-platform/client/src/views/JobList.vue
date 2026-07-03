@@ -26,7 +26,15 @@
       </el-select>
     </div>
 
-    <div class="job-cards">
+    <div class="job-cards" v-loading="loading">
+      <template v-if="jobList.length === 0 && !loading">
+        <div class="empty-state">
+          <el-icon size="48">
+            <Briefcase />
+          </el-icon>
+          <p>暂无职位数据</p>
+        </div>
+      </template>
       <el-card
         v-for="job in jobList"
         :key="job.id"
@@ -69,6 +77,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { Briefcase } from '@element-plus/icons-vue'
 import { jobApi } from '../api'
 
 const keyword = ref('')
@@ -76,10 +85,12 @@ const category = ref('')
 const location = ref('')
 const page = ref(1)
 const size = ref(10)
+const loading = ref(false)
 const jobList = ref([])
 const total = ref(0)
 
 const fetchJobs = async () => {
+  loading.value = true
   try {
     const params = {
       keyword: keyword.value,
@@ -95,6 +106,8 @@ const fetchJobs = async () => {
     }
   } catch (error) {
     console.error('获取职位列表失败:', error)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -208,5 +221,18 @@ onMounted(fetchJobs)
   display: flex;
   justify-content: center;
   margin-top: 32px;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 0;
+  color: #909399;
+}
+
+.empty-state p {
+  margin-top: 12px;
 }
 </style>

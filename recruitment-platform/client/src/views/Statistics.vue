@@ -1,6 +1,9 @@
 <template>
   <div class="statistics">
-    <h2>统计概览</h2>
+    <div class="stats-header">
+      <h2>统计概览</h2>
+      <el-button @click="refreshData">刷新数据</el-button>
+    </div>
 
     <div class="stats-grid">
       <el-card class="stat-card">
@@ -167,9 +170,13 @@ const getPercentage = (count) => {
   return Math.round((count / total) * 100)
 }
 
+const refreshData = async () => {
+  await fetchStatistics()
+  await fetchRecentJobs()
+}
+
 onMounted(() => {
-  fetchStatistics()
-  fetchRecentJobs()
+  refreshData()
 })
 </script>
 
@@ -178,8 +185,14 @@ onMounted(() => {
   padding: 20px;
 }
 
-.statistics h2 {
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
+}
+
+.stats-header h2 {
   font-size: 24px;
   color: #303133;
 }

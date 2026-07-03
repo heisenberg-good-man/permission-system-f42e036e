@@ -129,7 +129,7 @@ const updateStatus = async () => {
   try {
     const res = await applicationApi.updateStatus(application.value.id, newStatus.value)
     if (res.data.code === 200) {
-      application.value.status = newStatus.value
+      await fetchApplication()
       ElMessage.success('状态更新成功')
     }
   } catch (error) {

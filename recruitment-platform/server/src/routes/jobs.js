@@ -60,6 +60,22 @@ router.get('/:id', (req, res) => {
 })
 
 router.post('/', (req, res) => {
+  const { title, company, salary, description, requirements } = req.body
+  const missingFields = []
+  
+  if (!title || !title.trim()) missingFields.push('职位名称')
+  if (!company || !company.trim()) missingFields.push('公司名称')
+  if (!salary || !salary.trim()) missingFields.push('薪资范围')
+  if (!description || !description.trim()) missingFields.push('职位描述')
+  if (!requirements || !requirements.trim()) missingFields.push('任职要求')
+  
+  if (missingFields.length > 0) {
+    return res.json({ 
+      code: 400, 
+      message: `以下字段为必填项：${missingFields.join('、')}` 
+    })
+  }
+  
   const newJob = {
     id: getNextJobId(),
     ...req.body,

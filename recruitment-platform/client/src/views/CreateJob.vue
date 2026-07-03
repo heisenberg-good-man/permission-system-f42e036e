@@ -105,9 +105,12 @@ const submitForm = async () => {
         if (res.data.code === 200) {
           ElMessage.success('发布成功')
           router.push('/')
+        } else {
+          ElMessage.error(res.data.message || '发布失败')
         }
       } catch (error) {
-        ElMessage.error('发布失败')
+        const msg = error.response?.data?.message || '发布失败'
+        ElMessage.error(msg)
       }
     }
   })

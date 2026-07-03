@@ -141,7 +141,7 @@ const updateStatus = async (candidate) => {
   try {
     const res = await applicationApi.updateStatus(candidate.id, candidate.newStatus)
     if (res.data.code === 200) {
-      candidate.status = candidate.newStatus
+      await fetchCandidates()
       ElMessage.success('状态更新成功')
     }
   } catch (error) {
