@@ -277,10 +277,14 @@ const updateStatus = async () => {
   try {
     const res = await applicationApi.updateStatus(application.value.id, newStatus.value)
     if (res.data.code === 200) {
-      application.value.status = newStatus.value
-      application.value.timeline = res.data.data.timeline || application.value.timeline
+      // 服务端返回完整 application（含 timeline），整体替换以保证时间线与状态联动刷新
+      const updated = res.data.data
+      application.value = { ...application.value, ...updated }
+      newStatus.value = updated.status
       ElMessage.success('状态更新成功')
       refreshUnreadCount()
+      // 终态（offered/rejected）会触发"安排面试"按钮禁用，并可能影响面试状态展示，统一刷新一次
+      await fetchInterviews()
     } else {
       ElMessage.error(res.data.message || '状态更新失败')
       newStatus.value = application.value.status

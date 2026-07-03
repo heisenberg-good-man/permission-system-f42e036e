@@ -4,22 +4,25 @@ const { messages, getNextMessageId, applications } = require('../data/mockData')
 
 router.post('/', (req, res) => {
   const { applicationId, senderType, content } = req.body
-  
+
   const validSenderTypes = ['recruiter', 'candidate']
   if (!validSenderTypes.includes(senderType)) {
     return res.json({ code: 400, message: '无效的发送方类型' })
   }
-  
+  if (!content || !String(content).trim()) {
+    return res.json({ code: 400, message: '消息内容不能为空' })
+  }
+
   const application = applications.find(a => a.id === parseInt(applicationId))
   if (!application) {
     return res.json({ code: 404, message: '投递记录不存在' })
   }
-  
+
   const newMessage = {
     id: getNextMessageId(),
     applicationId: parseInt(applicationId),
     senderType,
-    content,
+    content: String(content).trim(),
     createdAt: new Date().toISOString()
   }
   messages.push(newMessage)

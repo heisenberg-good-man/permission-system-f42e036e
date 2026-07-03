@@ -8,7 +8,7 @@ const getStatusAction = (status) => {
     contacted: '已沟通',
     interviewing: '面试中',
     offered: '发 Offer',
-    rejected: '已拒绝'
+    rejected: '已淘汰'
   }
   return map[status] || status
 }
@@ -196,7 +196,8 @@ router.put('/:id/status', (req, res) => {
       })
     }
 
-    res.json({ code: 200, data: { id: application.id, status } })
+    // 返回完整 application（含 timeline），便于前端直接刷新时间线与终态联动
+    res.json({ code: 200, data: application })
   } else {
     res.json({ code: 404, message: '投递记录不存在' })
   }

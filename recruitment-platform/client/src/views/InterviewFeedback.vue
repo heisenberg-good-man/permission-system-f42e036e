@@ -136,6 +136,7 @@
               {{ interview.feedback ? '保存修改' : '提交反馈' }}
             </el-button>
             <el-button v-if="interview.feedback" @click="handleCancelEdit">取消修改</el-button>
+            <el-button v-else @click="handleResetForm">清空表单</el-button>
             <span v-if="interview.feedback" class="form-tip">已存在反馈，提交将更新原有评价（不会产生重复记录）</span>
           </el-form-item>
         </el-form>
@@ -241,6 +242,22 @@ const handleCancelEdit = async () => {
       await ElMessageBox.confirm('您有未保存的修改，确认放弃吗？', '提示', {
         type: 'warning',
         confirmButtonText: '确认放弃',
+        cancelButtonText: '继续编辑'
+      })
+    } catch {
+      return
+    }
+  }
+  form.value = { ...originalForm.value }
+}
+
+const handleResetForm = async () => {
+  // 新建反馈场景下，originalForm 是进入页面时的初始值（评分 0、字段为空）
+  if (hasFeedbackChanged()) {
+    try {
+      await ElMessageBox.confirm('确认清空当前已填写的内容吗？', '提示', {
+        type: 'warning',
+        confirmButtonText: '确认清空',
         cancelButtonText: '继续编辑'
       })
     } catch {

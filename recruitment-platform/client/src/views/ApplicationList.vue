@@ -18,7 +18,7 @@
         <el-option label="已沟通" value="contacted" />
         <el-option label="面试中" value="interviewing" />
         <el-option label="已发 Offer" value="offered" />
-        <el-option label="已拒绝" value="rejected" />
+        <el-option label="已淘汰" value="rejected" />
       </el-select>
     </div>
 
@@ -59,7 +59,7 @@
               <el-option label="已沟通" value="contacted" />
               <el-option label="面试中" value="interviewing" />
               <el-option label="已发 Offer" value="offered" />
-              <el-option label="已拒绝" value="rejected" />
+              <el-option label="已淘汰" value="rejected" />
             </el-select>
           </template>
         </el-table-column>
@@ -102,7 +102,7 @@ const STATUS_LABELS = {
   contacted: '已沟通',
   interviewing: '面试中',
   offered: '已发 Offer',
-  rejected: '已拒绝'
+  rejected: '已淘汰'
 }
 
 const fetchApplications = async () => {
@@ -159,6 +159,10 @@ const updateStatus = async (application) => {
       application.newStatus = targetStatus
       ElMessage.success('状态更新成功')
       refreshUnreadCount()
+      // 若当前有筛选条件，变更后的状态可能不再匹配筛选，需重新拉取列表避免残留错误行
+      if (statusFilter.value || keyword.value) {
+        await fetchApplications()
+      }
     } else {
       ElMessage.error(res.data.message || '状态更新失败')
       application.newStatus = application.status
@@ -179,7 +183,7 @@ const getStatusText = (status) => {
     contacted: '已沟通',
     interviewing: '面试中',
     offered: '已发 Offer',
-    rejected: '已拒绝'
+    rejected: '已淘汰'
   }
   return map[status] || status
 }

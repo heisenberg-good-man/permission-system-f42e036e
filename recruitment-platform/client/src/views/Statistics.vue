@@ -50,7 +50,7 @@
         <div class="stat-icon rejected-icon">❌</div>
         <div class="stat-info">
           <div class="stat-value">{{ statistics.rejectedCount }}</div>
-          <div class="stat-label">已拒绝</div>
+          <div class="stat-label">已淘汰</div>
         </div>
       </el-card>
 
@@ -161,7 +161,7 @@
           <div class="bar-value">{{ statistics.interviewingCount }}</div>
         </div>
         <div class="chart-bar">
-          <div class="bar-label">已拒绝</div>
+          <div class="bar-label">已淘汰</div>
           <div class="bar-track">
             <div
               class="bar-fill rejected"
@@ -231,7 +231,7 @@
         <el-table-column prop="contactedCount" label="已沟通" />
         <el-table-column prop="interviewingCount" label="面试中" />
         <el-table-column prop="offeredCount" label="已Offer" />
-        <el-table-column prop="rejectedCount" label="已拒绝" />
+        <el-table-column prop="rejectedCount" label="已淘汰" />
         <el-table-column label="操作">
           <template #default="scope">
             <el-button size="small" @click="$router.push(`/applications/${scope.row.jobId}`)">查看详情</el-button>
