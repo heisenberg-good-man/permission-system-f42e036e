@@ -85,6 +85,30 @@
           <div class="stat-label">待反馈数</div>
         </div>
       </el-card>
+
+      <el-card class="stat-card">
+        <div class="stat-icon hr-icon">📌</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ statistics.totalHiringRequests }}</div>
+          <div class="stat-label">用人需求总数</div>
+        </div>
+      </el-card>
+
+      <el-card class="stat-card">
+        <div class="stat-icon hr-approved-icon">✅</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ statistics.approvedHiringRequestCount }}</div>
+          <div class="stat-label">已通过需求</div>
+        </div>
+      </el-card>
+
+      <el-card class="stat-card">
+        <div class="stat-icon hr-pending-icon">⏳</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ statistics.pendingHiringRequestCount }}</div>
+          <div class="stat-label">待审批需求</div>
+        </div>
+      </el-card>
     </div>
 
     <el-card class="chart-card">
@@ -143,6 +167,45 @@
       </div>
     </el-card>
 
+    <el-card class="chart-card">
+      <h3 class="section-title">需求状态分布</h3>
+      <div class="status-chart">
+        <div class="chart-bar">
+          <div class="bar-label">待审批</div>
+          <div class="bar-track">
+            <div class="bar-fill pending" :style="{ width: getHRPercentage(statistics.pendingHiringRequestCount) + '%' }"></div>
+          </div>
+          <div class="bar-value">{{ statistics.pendingHiringRequestCount }}</div>
+        </div>
+        <div class="chart-bar">
+          <div class="bar-label">已通过</div>
+          <div class="bar-track">
+            <div class="bar-fill contacted" :style="{ width: getHRPercentage(statistics.approvedHiringRequestCount) + '%' }"></div>
+          </div>
+          <div class="bar-value">{{ statistics.approvedHiringRequestCount }}</div>
+        </div>
+        <div class="chart-bar">
+          <div class="bar-label">已拒绝</div>
+          <div class="bar-track">
+            <div class="bar-fill rejected" :style="{ width: getHRPercentage(statistics.rejectedHiringRequestCount) + '%' }"></div>
+          </div>
+          <div class="bar-value">{{ statistics.rejectedHiringRequestCount }}</div>
+        </div>
+        <div class="chart-bar">
+          <div class="bar-label">已关闭</div>
+          <div class="bar-track">
+            <div class="bar-fill offered" :style="{ width: getHRPercentage(statistics.closedHiringRequestCount) + '%' }"></div>
+          </div>
+          <div class="bar-value">{{ statistics.closedHiringRequestCount }}</div>
+        </div>
+      </div>
+      <div class="headcount-summary">
+        <span>总招聘 HC：<strong>{{ statistics.totalHeadcount }}</strong> 人</span>
+        <span>已到岗：<strong class="success">{{ statistics.filledHeadcount }}</strong> 人</span>
+        <span>到岗率：<strong>{{ getHeadcountRate() }}%</strong></span>
+      </div>
+    </el-card>
+
     <el-card class="recent-jobs-card">
       <h3 class="section-title">最近职位投递统计</h3>
       <el-table :data="recentJobs" style="width: 100%">
@@ -177,7 +240,14 @@ const statistics = ref({
   rejectedCount: 0,
   interviewCount: 0,
   feedbackCount: 0,
-  pendingFeedbackCount: 0
+  pendingFeedbackCount: 0,
+  totalHiringRequests: 0,
+  pendingHiringRequestCount: 0,
+  approvedHiringRequestCount: 0,
+  rejectedHiringRequestCount: 0,
+  closedHiringRequestCount: 0,
+  totalHeadcount: 0,
+  filledHeadcount: 0
 })
 
 const recentJobs = ref([])
@@ -215,6 +285,17 @@ const getPercentage = (count) => {
   const total = statistics.value.totalApplications
   if (total === 0) return 0
   return Math.round((count / total) * 100)
+}
+
+const getHRPercentage = (count) => {
+  const total = statistics.value.totalHiringRequests
+  if (total === 0) return 0
+  return Math.round((count / total) * 100)
+}
+
+const getHeadcountRate = () => {
+  if (!statistics.value.totalHeadcount) return 0
+  return Math.round((statistics.value.filledHeadcount / statistics.value.totalHeadcount) * 100)
 }
 
 const refreshData = async () => {
@@ -355,5 +436,32 @@ onMounted(() => {
 
 .recent-jobs-card {
   margin-bottom: 24px;
+}
+
+.headcount-summary {
+  display: flex;
+  gap: 24px;
+  padding: 12px 16px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: #606266;
+}
+
+.headcount-summary .success {
+  color: #67c23a;
+}
+
+.hr-icon {
+  background-color: #fdf6ec;
+}
+
+.hr-approved-icon {
+  background-color: #f0f9eb;
+}
+
+.hr-pending-icon {
+  background-color: #ecf5ff;
 }
 </style>

@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { jobs, getNextJobId } = require('../data/mockData')
+const { jobs, hiringRequests, getNextJobId } = require('../data/mockData')
 
 router.get('/', (req, res) => {
   const { keyword, category, location, salaryMin, salaryMax, page = 1, size = 10 } = req.query
@@ -60,7 +60,7 @@ router.get('/:id', (req, res) => {
 })
 
 router.post('/', (req, res) => {
-  const { title, company, salary, description, requirements } = req.body
+  const { title, company, salary, description, requirements, hiringRequestId } = req.body
   const missingFields = []
   
   if (!title || !title.trim()) missingFields.push('职位名称')
@@ -75,14 +75,37 @@ router.post('/', (req, res) => {
       message: `以下字段为必填项：${missingFields.join('、')}` 
     })
   }
+
+  let hiringRequestNo = ''
+  if (hiringRequestId) {
+    const hr = hiringRequests.find(r => r.id === parseInt(hiringRequestId))
+    if (!hr) {
+      return res.json({ code: 400, message: '关联的用人需求不存在' })
+    }
+    if (hr.status !== 'approved') {
+      return res.json({ code: 400, message: '只有审批通过的用人需求才能发布职位' })
+    }
+    hiringRequestNo = hr.requestNo
+  }
   
   const newJob = {
     id: getNextJobId(),
     ...req.body,
+    hiringRequestId: hiringRequestId ? parseInt(hiringRequestId) : undefined,
+    hiringRequestNo,
     createdAt: new Date().toISOString(),
     status: 'active'
   }
   jobs.push(newJob)
+
+  if (hiringRequestId) {
+    const hr = hiringRequests.find(r => r.id === parseInt(hiringRequestId))
+    if (hr && !hr.relatedJobIds.includes(newJob.id)) {
+      hr.relatedJobIds.push(newJob.id)
+      hr.updatedAt = new Date().toISOString()
+    }
+  }
+
   res.json({ code: 200, data: newJob })
 })
 

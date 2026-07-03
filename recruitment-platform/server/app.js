@@ -12,12 +12,14 @@ const applicationsRouter = require('./src/routes/applications')
 const messagesRouter = require('./src/routes/messages')
 const statisticsRouter = require('./src/routes/statistics')
 const interviewsRouter = require('./src/routes/interviews')
+const hiringRequestsRouter = require('./src/routes/hiringRequests')
 
 app.use('/api/jobs', jobsRouter)
 app.use('/api/applications', applicationsRouter)
 app.use('/api/messages', messagesRouter)
 app.use('/api/statistics', statisticsRouter)
 app.use('/api/interviews', interviewsRouter)
+app.use('/api/hiring-requests', hiringRequestsRouter)
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`)

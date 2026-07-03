@@ -68,6 +68,33 @@ export const interviewApi = {
   }
 }
 
+export const hiringRequestApi = {
+  list(params) {
+    return api.get('/hiring-requests', { params })
+  },
+  simple() {
+    return api.get('/hiring-requests/simple')
+  },
+  get(id) {
+    return api.get(`/hiring-requests/${id}`)
+  },
+  create(data) {
+    return api.post('/hiring-requests', data)
+  },
+  update(id, data) {
+    return api.put(`/hiring-requests/${id}`, data)
+  },
+  updateStatus(id, status) {
+    return api.put(`/hiring-requests/${id}/status`, { status })
+  },
+  batch(ids, action) {
+    return api.post('/hiring-requests/batch', { ids, action })
+  },
+  publishJob(id, data) {
+    return api.post(`/hiring-requests/${id}/publish-job`, data)
+  }
+}
+
 export const statisticsApi = {
   overview() {
     return api.get('/statistics')

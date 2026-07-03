@@ -9,6 +9,19 @@
         <el-form-item label="公司名称" prop="company">
           <el-input v-model="form.company" placeholder="请输入公司名称" />
         </el-form-item>
+        <el-form-item label="关联用人需求">
+          <el-select v-model="form.hiringRequestId" placeholder="可选，关联审批通过的需求" clearable style="width: 100%">
+            <el-option
+              v-for="req in hiringRequestOptions"
+              :key="req.id"
+              :label="`${req.requestNo} ${req.position}（${req.department}，需求${req.headcount}人）`"
+              :value="req.id"
+            />
+          </el-select>
+          <div v-if="form.hiringRequestId" class="hint-text">
+            发布后将自动回填到该需求的「关联职位」
+          </div>
+        </el-form-item>
         <el-form-item label="职位分类">
           <el-select v-model="form.category" placeholder="请选择职位分类">
             <el-option label="技术开发" value="技术开发" />
@@ -68,18 +81,31 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { jobApi } from '../api'
+import { jobApi, hiringRequestApi } from '../api'
 
 const router = useRouter()
 const formRef = ref(null)
 const submitLoading = ref(false)
+const hiringRequestOptions = ref([])
+
+const fetchHiringRequests = async () => {
+  try {
+    const res = await hiringRequestApi.simple()
+    if (res.data.code === 200) {
+      hiringRequestOptions.value = res.data.data
+    }
+  } catch (e) {
+    console.error('获取用人需求列表失败:', e)
+  }
+}
 
 const form = ref({
   title: '',
   company: '',
+  hiringRequestId: '',
   category: '',
   salary: '',
   location: '',
@@ -120,6 +146,7 @@ const submitForm = async () => {
     }
   })
 }
+onMounted(fetchHiringRequests)
 </script>
 
 <style scoped>
@@ -131,5 +158,11 @@ const submitForm = async () => {
   margin-bottom: 20px;
   font-size: 24px;
   color: #303133;
+}
+
+.hint-text {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
 }
 </style>

@@ -54,7 +54,12 @@
           </div>
           <p class="description">{{ job.description }}</p>
           <div class="card-footer">
-            <span class="category">{{ job.category }}</span>
+            <span class="category">
+              {{ job.category }}
+              <span v-if="job.hiringRequestNo" class="request-tag" @click.stop="$router.push('/hiring-requests')">
+                关联 {{ job.hiringRequestNo }}
+              </span>
+            </span>
             <span class="apply-btn">查看详情</span>
           </div>
         </div>
@@ -209,6 +214,20 @@ onMounted(fetchJobs)
 .category {
   color: #909399;
   font-size: 12px;
+}
+
+.request-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  background: #f0f9eb;
+  color: #67c23a;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.request-tag:hover {
+  background: #e1f3d8;
 }
 
 .apply-btn {

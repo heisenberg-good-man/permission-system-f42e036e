@@ -267,6 +267,91 @@ let feedbacks = [
   }
 ]
 
+let hiringRequests = [
+  {
+    id: 1,
+    requestNo: 'HR-2024-001',
+    department: '技术部',
+    position: '前端开发工程师',
+    headcount: 3,
+    level: '中级',
+    priority: 'normal',
+    salaryRange: '15-25K',
+    location: '北京',
+    category: '技术开发',
+    reason: '业务线扩张，支撑新产品前端研发。',
+    requirements: '熟悉 Vue/React，3年以上经验，良好沟通能力。',
+    applicant: '张技术总监',
+    status: 'approved',
+    filledCount: 1,
+    relatedJobIds: [1],
+    createdAt: '2024-01-10T09:00:00Z',
+    updatedAt: '2024-01-10T10:00:00Z'
+  },
+  {
+    id: 2,
+    requestNo: 'HR-2024-002',
+    department: '技术部',
+    position: 'Java后端开发工程师',
+    headcount: 2,
+    level: '高级',
+    priority: 'urgent',
+    salaryRange: '25-40K',
+    location: '上海',
+    category: '技术开发',
+    reason: '核心业务系统重构，需补充高级后端。',
+    requirements: '5年以上Java经验，精通Spring全家桶，有分布式架构经验。',
+    applicant: '刘后端负责人',
+    status: 'approved',
+    filledCount: 0,
+    relatedJobIds: [2],
+    createdAt: '2024-01-12T10:00:00Z',
+    updatedAt: '2024-01-12T14:00:00Z'
+  },
+  {
+    id: 3,
+    requestNo: 'HR-2024-003',
+    department: '产品部',
+    position: '高级产品经理',
+    headcount: 1,
+    level: '高级',
+    priority: 'normal',
+    salaryRange: '25-35K',
+    location: '深圳',
+    category: '产品运营',
+    reason: '新业务线成立，需要产品负责人。',
+    requirements: '5年以上产品经验，有B端产品背景优先。',
+    applicant: '钱产品总监',
+    status: 'pending',
+    filledCount: 0,
+    relatedJobIds: [],
+    createdAt: '2024-01-16T11:00:00Z',
+    updatedAt: '2024-01-16T11:00:00Z'
+  },
+  {
+    id: 4,
+    requestNo: 'HR-2024-004',
+    department: '设计部',
+    position: 'UI/UX设计师',
+    headcount: 2,
+    level: '中级',
+    priority: 'low',
+    salaryRange: '12-20K',
+    location: '杭州',
+    category: '设计',
+    reason: '配合产品迭代，增加设计产能。',
+    requirements: '2年以上设计经验，精通Figma，有完整项目案例。',
+    applicant: '孙设计主管',
+    status: 'rejected',
+    filledCount: 0,
+    relatedJobIds: [],
+    createdAt: '2024-01-14T09:00:00Z',
+    updatedAt: '2024-01-14T16:00:00Z'
+  }
+]
+
+let hiringRequestIdCounter = 5
+
 let jobIdCounter = 6
 let applicationIdCounter = 6
 let messageIdCounter = 4
@@ -279,9 +364,11 @@ module.exports = {
   messages,
   interviews,
   feedbacks,
+  hiringRequests,
   getNextJobId: () => jobIdCounter++,
   getNextApplicationId: () => applicationIdCounter++,
   getNextMessageId: () => messageIdCounter++,
   getNextInterviewId: () => interviewIdCounter++,
-  getNextFeedbackId: () => feedbackIdCounter++
+  getNextFeedbackId: () => feedbackIdCounter++,
+  getNextHiringRequestId: () => hiringRequestIdCounter++
 }
