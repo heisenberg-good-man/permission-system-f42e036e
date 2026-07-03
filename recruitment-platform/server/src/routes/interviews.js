@@ -5,9 +5,11 @@ const {
   feedbacks,
   applications,
   messages,
+  notifications,
   getNextInterviewId,
   getNextFeedbackId,
-  getNextMessageId
+  getNextMessageId,
+  getNextNotificationId
 } = require('../data/mockData')
 
 const VALID_ROUNDS = [1, 2, 3]
@@ -15,10 +17,22 @@ const VALID_INTERVIEW_STATUSES = ['scheduled', 'completed', 'cancelled']
 const VALID_CONCLUSIONS = ['next_round', 'pending', 'offer', 'reject']
 
 const CONCLUSION_META = {
-  next_round: { action: '进入下一轮', message: '您的面试已通过，将进入下一轮，请留意后续安排。', appStatus: 'interviewing' },
-  pending: { action: '面试待定', message: '面试结果待定，HR 将进一步评估后与您联系。', appStatus: 'interviewing' },
-  offer: { action: '发 Offer', message: '恭喜您通过面试，我们将向您发放 Offer。', appStatus: 'offered' },
-  reject: { action: '已淘汰', message: '很遗憾您本次未通过面试，感谢您的参与。', appStatus: 'rejected' }
+  next_round: { action: '进入下一轮', message: '您的面试已通过，将进入下一轮，请留意后续安排。', appStatus: 'interviewing', label: '进入下一轮' },
+  pending: { action: '面试待定', message: '面试结果待定，HR 将进一步评估后与您联系。', appStatus: 'interviewing', label: '面试待定' },
+  offer: { action: '发 Offer', message: '恭喜您通过面试，我们将向您发放 Offer。', appStatus: 'offered', label: '发 Offer' },
+  reject: { action: '已淘汰', message: '很遗憾您本次未通过面试，感谢您的参与。', appStatus: 'rejected', label: '已淘汰' }
+}
+
+const pushNotification = (payload) => {
+  const now = new Date().toISOString()
+  notifications.push({
+    id: getNextNotificationId(),
+    isRead: false,
+    isIgnored: false,
+    triggerTime: now,
+    createdAt: now,
+    ...payload
+  })
 }
 
 const attachFeedback = (interview) => {
@@ -143,6 +157,31 @@ router.post('/', (req, res) => {
     createdAt: new Date().toISOString()
   }
   interviews.push(newInterview)
+
+  // 联动：应聘方收到面试安排提醒
+  pushNotification({
+    role: 'candidate',
+    type: 'interview_scheduled',
+    title: '面试安排提醒',
+    content: `您应聘的「${newInterview.jobTitle}」${newInterview.roundName}已安排，时间为 ${newInterview.scheduledTime.replace('T', ' ').slice(0, 16)}，地点：${newInterview.location}。`,
+    priority: 'high',
+    relatedType: 'interview',
+    relatedId: newInterview.id,
+    linkUrl: `/interview/${newInterview.id}`
+  })
+
+  // 联动：面试官收到待填写反馈提醒
+  pushNotification({
+    role: 'interviewer',
+    type: 'feedback_pending',
+    title: '待填写面试反馈',
+    content: `请为候选人「${newInterview.candidateName}」的${newInterview.roundName}（${newInterview.jobTitle}）准备并填写面试反馈。`,
+    priority: 'normal',
+    relatedType: 'interview',
+    relatedId: newInterview.id,
+    linkUrl: `/interview/${newInterview.id}`
+  })
+
   res.json({ code: 200, data: attachFeedback(newInterview) })
 })
 
@@ -230,6 +269,32 @@ router.put('/:id/feedback', (req, res) => {
     content: meta.message,
     createdAt: now
   })
+
+  // 联动：招聘负责人收到面试反馈结果提醒
+  pushNotification({
+    role: 'recruiter',
+    type: 'feedback_submitted',
+    title: '面试反馈结果提醒',
+    content: `面试官「${interviewerValue}」已提交候选人「${interview.candidateName}」${interview.roundName}反馈，结论：${meta.label}。`,
+    priority: 'normal',
+    relatedType: 'interview',
+    relatedId: interview.id,
+    linkUrl: `/interview/${interview.id}`
+  })
+
+  // 联动：结论为发 Offer 时，提醒招聘负责人尽快确认 Offer
+  if (conclusion === 'offer') {
+    pushNotification({
+      role: 'recruiter',
+      type: 'offer_pending',
+      title: 'Offer 待确认',
+      content: `候选人「${interview.candidateName}」面试已通过，请尽快确认并发放 Offer。`,
+      priority: 'high',
+      relatedType: 'application',
+      relatedId: application.id,
+      linkUrl: `/application/${application.id}`
+    })
+  }
 
   res.json({
     code: 200,

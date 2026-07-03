@@ -109,6 +109,22 @@
           <div class="stat-label">待审批需求</div>
         </div>
       </el-card>
+
+      <el-card class="stat-card">
+        <div class="stat-icon notification-icon">🔔</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ statistics.totalNotifications }}</div>
+          <div class="stat-label">通知总数</div>
+        </div>
+      </el-card>
+
+      <el-card class="stat-card">
+        <div class="stat-icon unread-icon">📨</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ statistics.unreadNotificationCount }}</div>
+          <div class="stat-label">未读通知</div>
+        </div>
+      </el-card>
     </div>
 
     <el-card class="chart-card">
@@ -247,7 +263,9 @@ const statistics = ref({
   rejectedHiringRequestCount: 0,
   closedHiringRequestCount: 0,
   totalHeadcount: 0,
-  filledHeadcount: 0
+  filledHeadcount: 0,
+  totalNotifications: 0,
+  unreadNotificationCount: 0
 })
 
 const recentJobs = ref([])
@@ -463,5 +481,13 @@ onMounted(() => {
 
 .hr-pending-icon {
   background-color: #ecf5ff;
+}
+
+.notification-icon {
+  background-color: #fdf6ec;
+}
+
+.unread-icon {
+  background-color: #fef0f0;
 }
 </style>

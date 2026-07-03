@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { jobs, applications, interviews, feedbacks, hiringRequests } = require('../data/mockData')
+const { jobs, applications, interviews, feedbacks, hiringRequests, notifications } = require('../data/mockData')
 
 const buildOverview = () => ({
   totalJobs: jobs.filter(j => j.status === 'active').length,
@@ -19,7 +19,9 @@ const buildOverview = () => ({
   rejectedHiringRequestCount: hiringRequests.filter(r => r.status === 'rejected').length,
   closedHiringRequestCount: hiringRequests.filter(r => r.status === 'closed').length,
   totalHeadcount: hiringRequests.reduce((sum, r) => sum + r.headcount, 0),
-  filledHeadcount: hiringRequests.reduce((sum, r) => sum + (r.filledCount || 0), 0)
+  filledHeadcount: hiringRequests.reduce((sum, r) => sum + (r.filledCount || 0), 0),
+  totalNotifications: notifications.filter(n => !n.isIgnored).length,
+  unreadNotificationCount: notifications.filter(n => !n.isRead && !n.isIgnored).length
 })
 
 router.get('/', (req, res) => {

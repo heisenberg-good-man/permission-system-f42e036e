@@ -3,12 +3,32 @@ const router = express.Router()
 const {
   hiringRequests,
   jobs,
+  notifications,
   getNextHiringRequestId,
-  getNextJobId
+  getNextJobId,
+  getNextNotificationId
 } = require('../data/mockData')
 
 const VALID_STATUSES = ['pending', 'approved', 'rejected', 'closed']
 const VALID_PRIORITIES = ['low', 'normal', 'urgent']
+
+const STATUS_RESULT_LABEL = {
+  approved: '已审批通过',
+  rejected: '已被拒绝',
+  closed: '已被关闭'
+}
+
+const pushNotification = (payload) => {
+  const now = new Date().toISOString()
+  notifications.push({
+    id: getNextNotificationId(),
+    isRead: false,
+    isIgnored: false,
+    triggerTime: now,
+    createdAt: now,
+    ...payload
+  })
+}
 
 const validateFields = (body, requireId = false) => {
   const missing = []
@@ -161,8 +181,24 @@ router.put('/:id/status', (req, res) => {
   if (item.status === 'closed' && status !== 'closed') {
     return res.json({ code: 400, message: '已关闭的需求不可更改状态' })
   }
+  const previousStatus = item.status
   item.status = status
   item.updatedAt = new Date().toISOString()
+
+  // 联动：状态变化时通知申请人（hiring_manager）
+  if (previousStatus !== status && STATUS_RESULT_LABEL[status]) {
+    pushNotification({
+      role: 'hiring_manager',
+      type: 'hiring_request_result',
+      title: '用人需求审批结果',
+      content: `您提交的用人需求「${item.requestNo} ${item.position}」${STATUS_RESULT_LABEL[status]}。`,
+      priority: status === 'rejected' ? 'high' : 'normal',
+      relatedType: 'hiring_request',
+      relatedId: item.id,
+      linkUrl: '/hiring-requests'
+    })
+  }
+
   res.json({ code: 200, data: enrich(item) })
 })
 
@@ -191,9 +227,24 @@ router.post('/batch', (req, res) => {
       failMessages.push(`ID ${id} 已关闭，不可操作`)
       return
     }
+    const previousStatus = item.status
     item.status = targetStatus
     item.updatedAt = now
     successCount++
+
+    // 联动：批量状态变化时通知申请人
+    if (previousStatus !== targetStatus && STATUS_RESULT_LABEL[targetStatus]) {
+      pushNotification({
+        role: 'hiring_manager',
+        type: 'hiring_request_result',
+        title: '用人需求审批结果',
+        content: `您提交的用人需求「${item.requestNo} ${item.position}」${STATUS_RESULT_LABEL[targetStatus]}。`,
+        priority: targetStatus === 'rejected' ? 'high' : 'normal',
+        relatedType: 'hiring_request',
+        relatedId: item.id,
+        linkUrl: '/hiring-requests'
+      })
+    }
   })
 
   res.json({

@@ -103,3 +103,27 @@ export const statisticsApi = {
     return api.get(`/statistics/job/${jobId}`)
   }
 }
+
+export const notificationApi = {
+  list(params) {
+    return api.get('/notifications', { params })
+  },
+  unreadCount(role) {
+    return api.get('/notifications/unread-count', { params: { role } })
+  },
+  summary(role) {
+    return api.get('/notifications/summary', { params: { role } })
+  },
+  get(id) {
+    return api.get(`/notifications/${id}`)
+  },
+  markRead(id) {
+    return api.put(`/notifications/${id}/read`)
+  },
+  markAllRead(role) {
+    return api.put('/notifications/read-all', { role })
+  },
+  ignore(id) {
+    return api.put(`/notifications/${id}/ignore`)
+  }
+}

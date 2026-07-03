@@ -350,6 +350,159 @@ let hiringRequests = [
   }
 ]
 
+let notifications = [
+  {
+    id: 1,
+    role: 'recruiter',
+    type: 'new_application',
+    title: '新投递提醒',
+    content: '张三 投递了「前端开发工程师」职位，请及时筛选。',
+    priority: 'high',
+    isRead: false,
+    isIgnored: false,
+    relatedType: 'application',
+    relatedId: 1,
+    linkUrl: '/application/1',
+    triggerTime: '2024-01-16T09:00:00Z',
+    createdAt: '2024-01-16T09:00:00Z'
+  },
+  {
+    id: 2,
+    role: 'candidate',
+    type: 'interview_scheduled',
+    title: '面试安排提醒',
+    content: '您应聘的「前端开发工程师」初试已安排，时间为 1月19日 09:30，地点：视频会议。',
+    priority: 'high',
+    isRead: false,
+    isIgnored: false,
+    relatedType: 'interview',
+    relatedId: 3,
+    linkUrl: '/interview/3',
+    triggerTime: '2024-01-16T11:30:00Z',
+    createdAt: '2024-01-16T11:30:00Z'
+  },
+  {
+    id: 3,
+    role: 'interviewer',
+    type: 'feedback_pending',
+    title: '待填写面试反馈',
+    content: '请尽快为候选人「李四」的初试（前端开发工程师）填写面试反馈。',
+    priority: 'normal',
+    isRead: false,
+    isIgnored: false,
+    relatedType: 'interview',
+    relatedId: 3,
+    linkUrl: '/interview/3',
+    triggerTime: '2024-01-19T09:30:00Z',
+    createdAt: '2024-01-19T09:30:00Z'
+  },
+  {
+    id: 4,
+    role: 'interviewer',
+    type: 'feedback_pending',
+    title: '待填写面试反馈',
+    content: '请尽快为候选人「王五」的复试（Java后端开发工程师）填写面试反馈。',
+    priority: 'normal',
+    isRead: true,
+    isIgnored: false,
+    relatedType: 'interview',
+    relatedId: 2,
+    linkUrl: '/interview/2',
+    triggerTime: '2024-01-22T14:00:00Z',
+    createdAt: '2024-01-22T14:00:00Z'
+  },
+  {
+    id: 5,
+    role: 'recruiter',
+    type: 'feedback_submitted',
+    title: '面试反馈结果提醒',
+    content: '面试官「刘总监」已提交候选人「王五」初试反馈，结论：进入下一轮。',
+    priority: 'normal',
+    isRead: false,
+    isIgnored: false,
+    relatedType: 'interview',
+    relatedId: 1,
+    linkUrl: '/interview/1',
+    triggerTime: '2024-01-18T11:30:00Z',
+    createdAt: '2024-01-18T11:30:00Z'
+  },
+  {
+    id: 6,
+    role: 'recruiter',
+    type: 'offer_pending',
+    title: 'Offer 待确认',
+    content: '候选人「王五」面试已通过，请尽快确认并发放 Offer。',
+    priority: 'high',
+    isRead: false,
+    isIgnored: false,
+    relatedType: 'application',
+    relatedId: 3,
+    linkUrl: '/application/3',
+    triggerTime: '2024-01-18T11:30:00Z',
+    createdAt: '2024-01-18T11:30:00Z'
+  },
+  {
+    id: 7,
+    role: 'hiring_manager',
+    type: 'hiring_request_result',
+    title: '用人需求审批结果',
+    content: '您提交的用人需求「HR-2024-003 高级产品经理」已审批通过。',
+    priority: 'normal',
+    isRead: false,
+    isIgnored: false,
+    relatedType: 'hiring_request',
+    relatedId: 3,
+    linkUrl: '/hiring-requests',
+    triggerTime: '2024-01-16T11:00:00Z',
+    createdAt: '2024-01-16T11:00:00Z'
+  },
+  {
+    id: 8,
+    role: 'hiring_manager',
+    type: 'hiring_request_result',
+    title: '用人需求审批结果',
+    content: '您提交的用人需求「HR-2024-004 UI/UX设计师」已被拒绝，请查看原因。',
+    priority: 'normal',
+    isRead: true,
+    isIgnored: false,
+    relatedType: 'hiring_request',
+    relatedId: 4,
+    linkUrl: '/hiring-requests',
+    triggerTime: '2024-01-14T16:00:00Z',
+    createdAt: '2024-01-14T16:00:00Z'
+  },
+  {
+    id: 9,
+    role: 'candidate',
+    type: 'status_change',
+    title: '投递状态变更',
+    content: '您投递的「Java后端开发工程师」状态已更新为：面试中。',
+    priority: 'normal',
+    isRead: true,
+    isIgnored: false,
+    relatedType: 'application',
+    relatedId: 3,
+    linkUrl: '/application/3',
+    triggerTime: '2024-01-15T15:00:00Z',
+    createdAt: '2024-01-15T15:00:00Z'
+  },
+  {
+    id: 10,
+    role: 'recruiter',
+    type: 'new_application',
+    title: '新投递提醒',
+    content: '钱七 投递了「产品经理」职位，请及时筛选。',
+    priority: 'normal',
+    isRead: false,
+    isIgnored: false,
+    relatedType: 'application',
+    relatedId: 5,
+    linkUrl: '/application/5',
+    triggerTime: '2024-01-17T09:00:00Z',
+    createdAt: '2024-01-17T09:00:00Z'
+  }
+]
+
 let hiringRequestIdCounter = 5
 
 let jobIdCounter = 6
@@ -357,6 +510,7 @@ let applicationIdCounter = 6
 let messageIdCounter = 4
 let interviewIdCounter = 5
 let feedbackIdCounter = 2
+let notificationIdCounter = 11
 
 module.exports = {
   jobs,
@@ -365,10 +519,12 @@ module.exports = {
   interviews,
   feedbacks,
   hiringRequests,
+  notifications,
   getNextJobId: () => jobIdCounter++,
   getNextApplicationId: () => applicationIdCounter++,
   getNextMessageId: () => messageIdCounter++,
   getNextInterviewId: () => interviewIdCounter++,
   getNextFeedbackId: () => feedbackIdCounter++,
-  getNextHiringRequestId: () => hiringRequestIdCounter++
+  getNextHiringRequestId: () => hiringRequestIdCounter++,
+  getNextNotificationId: () => notificationIdCounter++
 }
