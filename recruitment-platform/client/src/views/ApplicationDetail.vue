@@ -1,182 +1,202 @@
 <template>
   <div class="application-detail">
-    <el-card v-if="application" v-loading="loading">
-      <div class="detail-header">
-        <div>
-          <h2>{{ application.jobTitle }}</h2>
-          <el-tag :type="getStatusType(application.status)" size="large">
-            {{ getStatusText(application.status) }}
-          </el-tag>
-        </div>
-        <el-select v-model="newStatus" @change="updateStatus" :disabled="statusLoading">
-          <el-option label="待筛选" value="pending" />
-          <el-option label="已沟通" value="contacted" />
-          <el-option label="面试中" value="interviewing" />
-          <el-option label="已发 Offer" value="offered" />
-          <el-option label="已拒绝" value="rejected" />
-        </el-select>
-      </div>
-
-      <div class="section">
-        <h3 class="section-title">候选人信息</h3>
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="姓名">{{ application.candidateName }}</el-descriptions-item>
-          <el-descriptions-item label="电话">{{ application.phone }}</el-descriptions-item>
-          <el-descriptions-item label="邮箱">{{ application.email }}</el-descriptions-item>
-          <el-descriptions-item label="学历">{{ application.education }}</el-descriptions-item>
-          <el-descriptions-item label="工作经验">{{ application.experience }}</el-descriptions-item>
-          <el-descriptions-item label="期望薪资">{{ application.expectSalary }}</el-descriptions-item>
-          <el-descriptions-item label="技能" :span="2">{{ application.skills }}</el-descriptions-item>
-        </el-descriptions>
-      </div>
-
-      <div class="section">
-        <h3 class="section-title">简历内容</h3>
-        <div class="resume-content">{{ application.resume }}</div>
-      </div>
-
-      <div class="section">
-        <h3 class="section-title">处理时间线</h3>
-        <div class="timeline">
-          <div
-            v-for="(item, index) in (application.timeline || [])"
-            :key="index"
-            :class="['timeline-item', item.status]"
-          >
-            <div class="timeline-dot" :class="item.status"></div>
-            <div class="timeline-content">
-              <div class="timeline-action">{{ item.action }}</div>
-              <div class="timeline-time">{{ formatTime(item.time) }}</div>
-            </div>
+    <div class="detail-nav">
+      <el-button @click="$router.back()">← 返回</el-button>
+    </div>
+    <el-card v-loading="loading">
+      <template v-if="application">
+        <div class="detail-header">
+          <div>
+            <h2>{{ application.jobTitle }}</h2>
+            <el-tag :type="getStatusType(application.status)" size="large">
+              {{ getStatusText(application.status) }}
+            </el-tag>
           </div>
+          <el-select v-model="newStatus" @change="updateStatus" :disabled="statusLoading" style="width: 160px">
+            <el-option label="待筛选" value="pending" />
+            <el-option label="已沟通" value="contacted" />
+            <el-option label="面试中" value="interviewing" />
+            <el-option label="已发 Offer" value="offered" />
+            <el-option label="已淘汰" value="rejected" />
+          </el-select>
         </div>
-      </div>
 
-      <div class="section">
-        <div class="section-head">
-          <h3 class="section-title">面试安排</h3>
-          <el-button
-            size="small"
-            type="primary"
-            @click="openArrangeDialog"
-            :disabled="isTerminalStatus"
-          >
-            安排面试
-          </el-button>
+        <div class="section">
+          <h3 class="section-title">候选人信息</h3>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="姓名">{{ application.candidateName }}</el-descriptions-item>
+            <el-descriptions-item label="电话">{{ application.phone }}</el-descriptions-item>
+            <el-descriptions-item label="邮箱">{{ application.email }}</el-descriptions-item>
+            <el-descriptions-item label="学历">{{ application.education }}</el-descriptions-item>
+            <el-descriptions-item label="工作经验">{{ application.experience }}</el-descriptions-item>
+            <el-descriptions-item label="期望薪资">{{ application.expectSalary }}</el-descriptions-item>
+            <el-descriptions-item label="技能" :span="2">{{ application.skills }}</el-descriptions-item>
+          </el-descriptions>
         </div>
-        <el-table :data="interviewList" style="width: 100%" empty-text="暂无面试安排">
-          <el-table-column label="轮次" width="80">
-            <template #default="scope">{{ scope.row.roundName }}</template>
-          </el-table-column>
-          <el-table-column prop="interviewer" label="面试官" width="120" />
-          <el-table-column label="面试时间" width="180">
-            <template #default="scope">{{ formatTime(scope.row.scheduledTime) }}</template>
-          </el-table-column>
-          <el-table-column prop="location" label="地点" />
-          <el-table-column label="面试状态" width="100">
-            <template #default="scope">
-              <el-tag :type="getInterviewStatusType(scope.row.status)">
-                {{ getInterviewStatusText(scope.row.status) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="反馈状态" width="100">
-            <template #default="scope">
-              <el-tag :type="scope.row.feedbackStatus === 'submitted' ? 'success' : 'info'">
-                {{ scope.row.feedbackStatus === 'submitted' ? '已反馈' : '待反馈' }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="120">
-            <template #default="scope">
-              <el-button size="small" @click="$router.push(`/interview/${scope.row.id}`)">
-                {{ scope.row.feedbackStatus === 'submitted' ? '查看反馈' : '填写反馈' }}
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
 
-      <div class="section">
-        <h3 class="section-title">沟通消息</h3>
-        <div class="message-list">
-          <div
-            v-for="message in messageList"
-            :key="message.id"
-            :class="['message-item', message.senderType]"
-          >
-            <div class="message-avatar">
-              {{ message.senderType === 'recruiter' ? 'HR' : '候选人' }}
-            </div>
-            <div class="message-content">
-              <div class="message-header">
-                <span class="sender-name">{{ message.senderType === 'recruiter' ? '招聘方' : '候选人' }}</span>
-                <span class="send-time">{{ formatTime(message.createdAt) }}</span>
+        <div class="section">
+          <h3 class="section-title">简历内容</h3>
+          <div class="resume-content">{{ application.resume }}</div>
+        </div>
+
+        <div class="section">
+          <h3 class="section-title">处理时间线</h3>
+          <div v-if="(application.timeline || []).length === 0" class="empty-inline">
+            暂无时间线记录
+          </div>
+          <div v-else class="timeline">
+            <div
+              v-for="(item, index) in application.timeline"
+              :key="index"
+              :class="['timeline-item', item.status]"
+            >
+              <div class="timeline-dot" :class="item.status"></div>
+              <div class="timeline-content">
+                <div class="timeline-action">{{ item.action }}</div>
+                <div class="timeline-time">{{ formatTime(item.time) }}</div>
               </div>
-              <p>{{ message.content }}</p>
             </div>
           </div>
         </div>
-        <div class="message-input">
-          <el-input
-            v-model="newMessage"
-            placeholder="输入消息内容"
-            @keyup.enter="sendMessage"
-            :disabled="messageLoading"
-          >
-            <template #append>
-              <el-button @click="sendMessage" :loading="messageLoading">发送</el-button>
-            </template>
-          </el-input>
-        </div>
-      </div>
 
-      <el-dialog v-model="arrangeDialogVisible" title="安排面试" width="480px">
-        <el-form :model="arrangeForm" label-width="90px">
-          <el-form-item label="面试轮次" required>
-            <el-select v-model="arrangeForm.round" placeholder="选择轮次" class="arrange-select">
-              <el-option label="初试" :value="1" />
-              <el-option label="复试" :value="2" />
-              <el-option label="终试" :value="3" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="面试官" required>
-            <el-input v-model="arrangeForm.interviewer" placeholder="请输入面试官姓名" />
-          </el-form-item>
-          <el-form-item label="面试时间" required>
-            <el-date-picker
-              v-model="arrangeForm.scheduledTime"
-              type="datetime"
-              placeholder="选择面试时间"
-              value-format="YYYY-MM-DDTHH:mm:ss"
-              class="arrange-select"
+        <div class="section">
+          <div class="section-head">
+            <h3 class="section-title">面试安排</h3>
+            <el-button
+              size="small"
+              type="primary"
+              @click="openArrangeDialog"
+              :disabled="isTerminalStatus"
+            >
+              安排面试
+            </el-button>
+          </div>
+          <el-table :data="interviewList" style="width: 100%" empty-text="暂无面试安排">
+            <el-table-column label="轮次" width="80">
+              <template #default="scope">{{ scope.row.roundName }}</template>
+            </el-table-column>
+            <el-table-column prop="interviewer" label="面试官" width="120" />
+            <el-table-column label="面试时间" width="180">
+              <template #default="scope">{{ formatTime(scope.row.scheduledTime) }}</template>
+            </el-table-column>
+            <el-table-column prop="location" label="地点" />
+            <el-table-column label="面试状态" width="100">
+              <template #default="scope">
+                <el-tag :type="getInterviewStatusType(scope.row.status)">
+                  {{ getInterviewStatusText(scope.row.status) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="反馈状态" width="100">
+              <template #default="scope">
+                <el-tag :type="scope.row.feedbackStatus === 'submitted' ? 'success' : 'info'">
+                  {{ scope.row.feedbackStatus === 'submitted' ? '已反馈' : '待反馈' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="120">
+              <template #default="scope">
+                <el-button size="small" @click="$router.push(`/interview/${scope.row.id}`)">
+                  {{ scope.row.feedbackStatus === 'submitted' ? '查看反馈' : '填写反馈' }}
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <div class="section">
+          <h3 class="section-title">沟通消息</h3>
+          <div v-if="messageList.length === 0" class="empty-inline">
+            暂无沟通消息，输入下方内容开始沟通
+          </div>
+          <div v-else class="message-list">
+            <div
+              v-for="message in messageList"
+              :key="message.id"
+              :class="['message-item', message.senderType]"
+            >
+              <div class="message-avatar">
+                {{ message.senderType === 'recruiter' ? 'HR' : '候选人' }}
+              </div>
+              <div class="message-content">
+                <div class="message-header">
+                  <span class="sender-name">{{ message.senderType === 'recruiter' ? '招聘方' : '候选人' }}</span>
+                  <span class="send-time">{{ formatTime(message.createdAt) }}</span>
+                </div>
+                <p>{{ message.content }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="message-input">
+            <el-input
+              v-model="newMessage"
+              type="textarea"
+              :rows="2"
+              placeholder="输入消息内容，按 Ctrl+Enter 发送"
+              @keydown.ctrl.enter="sendMessage"
+              :disabled="messageLoading"
             />
-          </el-form-item>
-          <el-form-item label="面试地点">
-            <el-input v-model="arrangeForm.location" placeholder="现场/视频会议链接等" />
-          </el-form-item>
-        </el-form>
-        <template #footer>
-          <el-button @click="arrangeDialogVisible = false">取消</el-button>
-          <el-button type="primary" :loading="arrangeLoading" @click="arrangeInterview">确定安排</el-button>
-        </template>
-      </el-dialog>
+            <div class="message-actions">
+              <el-button type="primary" @click="sendMessage" :loading="messageLoading">发送消息</el-button>
+            </div>
+          </div>
+        </div>
+
+        <el-dialog v-model="arrangeDialogVisible" title="安排面试" width="480px">
+          <el-form :model="arrangeForm" label-width="90px">
+            <el-form-item label="面试轮次" required>
+              <el-select v-model="arrangeForm.round" placeholder="选择轮次" class="arrange-select">
+                <el-option label="初试" :value="1" />
+                <el-option label="复试" :value="2" />
+                <el-option label="终试" :value="3" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="面试官" required>
+              <el-input v-model="arrangeForm.interviewer" placeholder="请输入面试官姓名" />
+            </el-form-item>
+            <el-form-item label="面试时间" required>
+              <el-date-picker
+                v-model="arrangeForm.scheduledTime"
+                type="datetime"
+                placeholder="选择面试时间"
+                value-format="YYYY-MM-DDTHH:mm:ss"
+                class="arrange-select"
+              />
+            </el-form-item>
+            <el-form-item label="面试地点">
+              <el-input v-model="arrangeForm.location" placeholder="现场/视频会议链接等" />
+            </el-form-item>
+          </el-form>
+          <template #footer>
+            <el-button @click="arrangeDialogVisible = false">取消</el-button>
+            <el-button type="primary" :loading="arrangeLoading" @click="arrangeInterview">确定安排</el-button>
+          </template>
+        </el-dialog>
+      </template>
+      <template v-else-if="loadError">
+        <el-empty :description="loadError">
+          <el-button type="primary" @click="fetchApplication">重新加载</el-button>
+          <el-button @click="$router.back()">返回上一页</el-button>
+        </el-empty>
+      </template>
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, inject } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { applicationApi, messageApi, interviewApi } from '../api'
 
 const route = useRoute()
+const refreshUnreadCount = inject('refreshUnreadCount', () => {})
 const application = ref(null)
 const newStatus = ref('')
 const messageList = ref([])
 const newMessage = ref('')
 const loading = ref(false)
+const loadError = ref('')
 const statusLoading = ref(false)
 const messageLoading = ref(false)
 
@@ -190,6 +210,14 @@ const arrangeForm = ref({
   location: '视频会议'
 })
 
+const STATUS_LABELS = {
+  pending: '待筛选',
+  contacted: '已沟通',
+  interviewing: '面试中',
+  offered: '已发 Offer',
+  rejected: '已淘汰'
+}
+
 const isTerminalStatus = computed(() => {
   if (!application.value) return false
   return application.value.status === 'rejected' || application.value.status === 'offered'
@@ -197,20 +225,20 @@ const isTerminalStatus = computed(() => {
 
 const fetchApplication = async () => {
   loading.value = true
+  loadError.value = ''
   try {
     const res = await applicationApi.get(route.params.id)
     if (res.data.code === 200) {
       application.value = res.data.data
       newStatus.value = res.data.data.status
-      await fetchMessages()
-      await fetchInterviews()
+      await Promise.all([fetchMessages(), fetchInterviews()])
     } else {
-      ElMessage.error(res.data.message || '获取投递详情失败')
+      loadError.value = res.data.message || '获取投递详情失败'
     }
   } catch (error) {
     console.error('获取投递详情失败:', error)
-    const msg = error.response?.data?.message || '获取投递详情失败'
-    ElMessage.error(msg)
+    const msg = error.response?.data?.message || '获取投递详情失败，请检查网络或稍后重试'
+    loadError.value = msg
   } finally {
     loading.value = false
   }
@@ -230,12 +258,29 @@ const fetchMessages = async () => {
 
 const updateStatus = async () => {
   if (!application.value || application.value.status === newStatus.value) return
+  try {
+    await ElMessageBox.confirm(
+      `确认将状态从「${STATUS_LABELS[application.value.status]}」改为「${STATUS_LABELS[newStatus.value]}」？`,
+      '状态变更确认',
+      {
+        type: 'warning',
+        confirmButtonText: '确认变更',
+        cancelButtonText: '取消'
+      }
+    )
+  } catch {
+    newStatus.value = application.value.status
+    return
+  }
+
   statusLoading.value = true
   try {
     const res = await applicationApi.updateStatus(application.value.id, newStatus.value)
     if (res.data.code === 200) {
-      await fetchApplication()
+      application.value.status = newStatus.value
+      application.value.timeline = res.data.data.timeline || application.value.timeline
       ElMessage.success('状态更新成功')
+      refreshUnreadCount()
     } else {
       ElMessage.error(res.data.message || '状态更新失败')
       newStatus.value = application.value.status
@@ -251,18 +296,24 @@ const updateStatus = async () => {
 }
 
 const sendMessage = async () => {
-  if (!newMessage.value.trim()) return
+  const content = newMessage.value.trim()
+  if (!content) {
+    ElMessage.warning('请输入消息内容')
+    return
+  }
+  if (!application.value) return
   messageLoading.value = true
   try {
     const res = await messageApi.create({
       applicationId: application.value.id,
       senderType: 'recruiter',
-      content: newMessage.value.trim()
+      content
     })
     if (res.data.code === 200) {
       messageList.value.push(res.data.data)
       newMessage.value = ''
       ElMessage.success('消息发送成功')
+      refreshUnreadCount()
     } else {
       ElMessage.error(res.data.message || '消息发送失败')
     }
@@ -323,6 +374,7 @@ const arrangeInterview = async () => {
       ElMessage.success('面试安排成功')
       arrangeDialogVisible.value = false
       await fetchInterviews()
+      refreshUnreadCount()
     } else {
       ElMessage.error(res.data.message || '面试安排失败')
     }
@@ -382,6 +434,10 @@ onMounted(() => {
   padding: 20px;
 }
 
+.detail-nav {
+  margin-bottom: 16px;
+}
+
 .detail-header {
   display: flex;
   justify-content: space-between;
@@ -414,6 +470,15 @@ onMounted(() => {
   font-size: 18px;
   font-weight: bold;
   color: #303133;
+  margin-bottom: 12px;
+}
+
+.empty-inline {
+  text-align: center;
+  padding: 24px 0;
+  color: #909399;
+  background-color: #f5f7fa;
+  border-radius: 8px;
   margin-bottom: 12px;
 }
 
@@ -504,6 +569,12 @@ onMounted(() => {
 
 .message-input {
   margin-top: 16px;
+}
+
+.message-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 
 .timeline {

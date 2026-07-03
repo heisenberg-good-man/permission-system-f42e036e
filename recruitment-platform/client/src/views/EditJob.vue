@@ -1,68 +1,75 @@
 <template>
   <div class="edit-job">
     <h2>编辑职位</h2>
-    <el-card v-if="job">
-      <el-form :model="form" :rules="rules" ref="formRef" label-width="120px">
-        <el-form-item label="职位名称" prop="title">
-          <el-input v-model="form.title" placeholder="请输入职位名称" />
-        </el-form-item>
-        <el-form-item label="公司名称" prop="company">
-          <el-input v-model="form.company" placeholder="请输入公司名称" />
-        </el-form-item>
-        <el-form-item label="职位分类">
-          <el-select v-model="form.category" placeholder="请选择职位分类">
-            <el-option label="技术开发" value="技术开发" />
-            <el-option label="产品运营" value="产品运营" />
-            <el-option label="设计" value="设计" />
-            <el-option label="测试" value="测试" />
-            <el-option label="其他" value="其他" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="薪资范围" prop="salary">
-          <el-input v-model="form.salary" placeholder="如：15-25K" />
-        </el-form-item>
-        <el-form-item label="工作地点">
-          <el-select v-model="form.location" placeholder="请选择工作地点">
-            <el-option label="北京" value="北京" />
-            <el-option label="上海" value="上海" />
-            <el-option label="深圳" value="深圳" />
-            <el-option label="杭州" value="杭州" />
-            <el-option label="成都" value="成都" />
-            <el-option label="广州" value="广州" />
-            <el-option label="武汉" value="武汉" />
-            <el-option label="南京" value="南京" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="经验要求">
-          <el-select v-model="form.experience" placeholder="请选择经验要求">
-            <el-option label="不限" value="不限" />
-            <el-option label="应届生" value="应届生" />
-            <el-option label="1-3年" value="1-3年" />
-            <el-option label="3-5年" value="3-5年" />
-            <el-option label="5-10年" value="5-10年" />
-            <el-option label="10年以上" value="10年以上" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="学历要求">
-          <el-select v-model="form.education" placeholder="请选择学历要求">
-            <el-option label="不限" value="不限" />
-            <el-option label="大专" value="大专" />
-            <el-option label="本科" value="本科" />
-            <el-option label="硕士" value="硕士" />
-            <el-option label="博士" value="博士" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="职位描述" prop="description">
-          <el-input v-model="form.description" type="textarea" :rows="4" placeholder="请输入职位描述" />
-        </el-form-item>
-        <el-form-item label="任职要求" prop="requirements">
-          <el-input v-model="form.requirements" type="textarea" :rows="4" placeholder="请输入任职要求" />
-        </el-form-item>
-        <el-form-item>
-          <el-button @click="$router.push(`/job/${job.id}`)">返回详情</el-button>
-          <el-button type="primary" @click="submitForm" :loading="submitLoading">保存修改</el-button>
-        </el-form-item>
-      </el-form>
+    <el-card v-loading="loading">
+      <template v-if="job">
+        <el-form :model="form" :rules="rules" ref="formRef" label-width="120px">
+          <el-form-item label="职位名称" prop="title">
+            <el-input v-model="form.title" placeholder="请输入职位名称" />
+          </el-form-item>
+          <el-form-item label="公司名称" prop="company">
+            <el-input v-model="form.company" placeholder="请输入公司名称" />
+          </el-form-item>
+          <el-form-item label="职位分类">
+            <el-select v-model="form.category" placeholder="请选择职位分类" style="width: 100%">
+              <el-option label="技术开发" value="技术开发" />
+              <el-option label="产品运营" value="产品运营" />
+              <el-option label="设计" value="设计" />
+              <el-option label="测试" value="测试" />
+              <el-option label="其他" value="其他" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="薪资范围" prop="salary">
+            <el-input v-model="form.salary" placeholder="如：15-25K" />
+          </el-form-item>
+          <el-form-item label="工作地点">
+            <el-select v-model="form.location" placeholder="请选择工作地点" style="width: 100%">
+              <el-option label="北京" value="北京" />
+              <el-option label="上海" value="上海" />
+              <el-option label="深圳" value="深圳" />
+              <el-option label="杭州" value="杭州" />
+              <el-option label="成都" value="成都" />
+              <el-option label="广州" value="广州" />
+              <el-option label="武汉" value="武汉" />
+              <el-option label="南京" value="南京" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="经验要求">
+            <el-select v-model="form.experience" placeholder="请选择经验要求" style="width: 100%">
+              <el-option label="不限" value="不限" />
+              <el-option label="应届生" value="应届生" />
+              <el-option label="1-3年" value="1-3年" />
+              <el-option label="3-5年" value="3-5年" />
+              <el-option label="5-10年" value="5-10年" />
+              <el-option label="10年以上" value="10年以上" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="学历要求">
+            <el-select v-model="form.education" placeholder="请选择学历要求" style="width: 100%">
+              <el-option label="不限" value="不限" />
+              <el-option label="大专" value="大专" />
+              <el-option label="本科" value="本科" />
+              <el-option label="硕士" value="硕士" />
+              <el-option label="博士" value="博士" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="职位描述" prop="description">
+            <el-input v-model="form.description" type="textarea" :rows="4" placeholder="请输入职位描述" />
+          </el-form-item>
+          <el-form-item label="任职要求" prop="requirements">
+            <el-input v-model="form.requirements" type="textarea" :rows="4" placeholder="请输入任职要求" />
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="handleCancel">取消</el-button>
+            <el-button type="primary" @click="submitForm" :loading="submitLoading">保存修改</el-button>
+          </el-form-item>
+        </el-form>
+      </template>
+      <template v-else-if="loadError">
+        <el-empty :description="loadError">
+          <el-button type="primary" @click="$router.push('/')">返回职位列表</el-button>
+        </el-empty>
+      </template>
     </el-card>
   </div>
 </template>
@@ -70,14 +77,17 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { jobApi } from '../api'
 
 const route = useRoute()
 const router = useRouter()
 const formRef = ref(null)
 const job = ref(null)
+const loading = ref(false)
 const submitLoading = ref(false)
+const loadError = ref('')
+const originalForm = ref({})
 
 const form = ref({
   title: '',
@@ -100,15 +110,43 @@ const rules = {
 }
 
 const fetchJob = async () => {
+  loading.value = true
+  loadError.value = ''
   try {
     const res = await jobApi.get(route.params.id)
     if (res.data.code === 200) {
       job.value = res.data.data
       form.value = { ...res.data.data }
+      originalForm.value = { ...res.data.data }
+    } else {
+      loadError.value = res.data.message || '获取职位信息失败'
     }
   } catch (error) {
     console.error('获取职位详情失败:', error)
+    loadError.value = '获取职位信息失败，请检查网络或稍后重试'
+  } finally {
+    loading.value = false
   }
+}
+
+const hasChanged = () => {
+  const keys = Object.keys(originalForm.value)
+  return keys.some(k => form.value[k] !== originalForm.value[k])
+}
+
+const handleCancel = async () => {
+  if (hasChanged()) {
+    try {
+      await ElMessageBox.confirm('您有未保存的修改，确认放弃吗？', '提示', {
+        type: 'warning',
+        confirmButtonText: '确认放弃',
+        cancelButtonText: '继续编辑'
+      })
+    } catch {
+      return
+    }
+  }
+  router.push(`/job/${job.value.id}`)
 }
 
 const submitForm = async () => {

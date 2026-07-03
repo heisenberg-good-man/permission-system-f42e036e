@@ -81,13 +81,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { User } from '@element-plus/icons-vue'
 import { applicationApi } from '../api'
 
 const route = useRoute()
+const refreshUnreadCount = inject('refreshUnreadCount', () => {})
 const keyword = ref('')
 const statusFilter = ref('')
 const page = ref(1)
@@ -95,6 +96,14 @@ const size = ref(10)
 const loading = ref(false)
 const applicationList = ref([])
 const total = ref(0)
+
+const STATUS_LABELS = {
+  pending: '待筛选',
+  contacted: '已沟通',
+  interviewing: '面试中',
+  offered: '已发 Offer',
+  rejected: '已拒绝'
+}
 
 const fetchApplications = async () => {
   loading.value = true
@@ -113,6 +122,8 @@ const fetchApplications = async () => {
         statusLoading: false
       }))
       total.value = res.data.data.total
+    } else {
+      ElMessage.error(res.data.message || '获取投递列表失败')
     }
   } catch (error) {
     console.error('获取投递列表失败:', error)
@@ -123,13 +134,31 @@ const fetchApplications = async () => {
 }
 
 const updateStatus = async (application) => {
-  if (application.status === application.newStatus || application.statusLoading) return
+  const targetStatus = application.newStatus
+  if (targetStatus === application.status || application.statusLoading) return
+  try {
+    await ElMessageBox.confirm(
+      `确认将「${application.candidateName}」的状态从「${STATUS_LABELS[application.status]}」改为「${STATUS_LABELS[targetStatus]}」？`,
+      '状态变更确认',
+      {
+        type: 'warning',
+        confirmButtonText: '确认变更',
+        cancelButtonText: '取消'
+      }
+    )
+  } catch {
+    application.newStatus = application.status
+    return
+  }
+
   application.statusLoading = true
   try {
-    const res = await applicationApi.updateStatus(application.id, application.newStatus)
+    const res = await applicationApi.updateStatus(application.id, targetStatus)
     if (res.data.code === 200) {
-      await fetchApplications()
+      application.status = targetStatus
+      application.newStatus = targetStatus
       ElMessage.success('状态更新成功')
+      refreshUnreadCount()
     } else {
       ElMessage.error(res.data.message || '状态更新失败')
       application.newStatus = application.status

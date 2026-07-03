@@ -4,7 +4,8 @@
       <el-button @click="$router.push('/interviews')">返回面试反馈列表</el-button>
     </div>
 
-    <el-card v-if="interview" v-loading="loading">
+    <el-card v-loading="loading">
+      <template v-if="interview">
       <!-- 面试元信息 -->
       <div class="detail-header">
         <div>
@@ -134,28 +135,35 @@
             <el-button type="primary" :loading="saving" @click="saveFeedback">
               {{ interview.feedback ? '保存修改' : '提交反馈' }}
             </el-button>
+            <el-button v-if="interview.feedback" @click="handleCancelEdit">取消修改</el-button>
             <span v-if="interview.feedback" class="form-tip">已存在反馈，提交将更新原有评价（不会产生重复记录）</span>
           </el-form-item>
         </el-form>
       </div>
+      </template>
+      <template v-else-if="!loading">
+        <el-empty description="面试记录不存在或已删除">
+          <el-button type="primary" @click="$router.push('/interviews')">返回列表</el-button>
+        </el-empty>
+      </template>
     </el-card>
-
-    <el-empty v-else-if="!loading" description="面试记录不存在或已删除" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, inject } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { interviewApi } from '../api'
 
 const route = useRoute()
+const refreshUnreadCount = inject('refreshUnreadCount', () => {})
 const interview = ref(null)
 const application = ref(null)
 const messageList = ref([])
 const loading = ref(false)
 const saving = ref(false)
+const originalForm = ref({})
 
 const form = ref({
   rating: 0,
@@ -169,7 +177,6 @@ const form = ref({
 const readOnly = computed(() => {
   if (!application.value) return false
   const isTerminal = application.value.status === 'rejected' || application.value.status === 'offered'
-  // 终态且当前面试尚无反馈 → 不可新建；已有反馈时允许查看但同样禁用编辑
   return isTerminal
 })
 
@@ -178,6 +185,14 @@ const readOnlyTip = computed(() => {
   const label = application.value.status === 'offered' ? '已发 Offer' : '已淘汰'
   return `该候选人${label}，不可再提交普通面试反馈（表单仅作查看）`
 })
+
+const hasFeedbackChanged = () => {
+  const f = form.value
+  const o = originalForm.value
+  return f.rating !== o.rating || f.strengths !== o.strengths ||
+    f.risks !== o.risks || f.conclusion !== o.conclusion ||
+    f.comment !== o.comment || f.interviewer !== o.interviewer
+}
 
 const fetchDetail = async () => {
   loading.value = true
@@ -198,8 +213,16 @@ const fetchDetail = async () => {
           interviewer: fb.interviewer || ''
         }
       } else {
-        form.value.interviewer = interview.value.interviewer
+        form.value = {
+          rating: 0,
+          strengths: '',
+          risks: '',
+          conclusion: '',
+          comment: '',
+          interviewer: interview.value.interviewer
+        }
       }
+      originalForm.value = { ...form.value }
     } else {
       ElMessage.error(res.data.message || '获取面试详情失败')
     }
@@ -210,6 +233,21 @@ const fetchDetail = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handleCancelEdit = async () => {
+  if (hasFeedbackChanged()) {
+    try {
+      await ElMessageBox.confirm('您有未保存的修改，确认放弃吗？', '提示', {
+        type: 'warning',
+        confirmButtonText: '确认放弃',
+        cancelButtonText: '继续编辑'
+      })
+    } catch {
+      return
+    }
+  }
+  form.value = { ...originalForm.value }
 }
 
 const saveFeedback = async () => {
@@ -240,6 +278,7 @@ const saveFeedback = async () => {
     if (res.data.code === 200) {
       ElMessage.success('反馈保存成功')
       await fetchDetail()
+      refreshUnreadCount()
     } else {
       ElMessage.error(res.data.message || '反馈保存失败')
     }

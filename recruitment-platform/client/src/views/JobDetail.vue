@@ -1,45 +1,53 @@
 <template>
   <div class="job-detail">
-    <el-card v-if="job">
-      <div class="detail-header">
-        <div>
-          <h1 class="job-title">{{ job.title }}</h1>
-          <span class="salary">{{ job.salary }}</span>
+    <el-card v-loading="loading">
+      <template v-if="job">
+        <div class="detail-header">
+          <div>
+            <h1 class="job-title">{{ job.title }}</h1>
+            <span class="salary">{{ job.salary }}</span>
+          </div>
+          <div class="header-actions">
+            <el-button @click="$router.push(`/applications/${job.id}`)">查看投递({{ applicationCount }})</el-button>
+            <el-button @click="$router.push(`/job/${job.id}/edit`)">编辑职位</el-button>
+          </div>
         </div>
-        <div class="header-actions">
-          <el-button @click="$router.push(`/applications/${job.id}`)">查看投递({{ applicationCount }})</el-button>
-          <el-button @click="$router.push(`/job/${job.id}/edit`)">编辑职位</el-button>
+
+        <div class="basic-info">
+          <span class="info-item">{{ job.company }}</span>
+          <span class="info-divider">|</span>
+          <span class="info-item">{{ job.location }}</span>
+          <span class="info-divider">|</span>
+          <span class="info-item">{{ job.experience }}</span>
+          <span class="info-divider">|</span>
+          <span class="info-item">{{ job.education }}</span>
+          <span class="info-divider">|</span>
+          <span class="info-item">{{ job.category }}</span>
         </div>
-      </div>
 
-      <div class="basic-info">
-        <span class="info-item">{{ job.company }}</span>
-        <span class="info-divider">|</span>
-        <span class="info-item">{{ job.location }}</span>
-        <span class="info-divider">|</span>
-        <span class="info-item">{{ job.experience }}</span>
-        <span class="info-divider">|</span>
-        <span class="info-item">{{ job.education }}</span>
-        <span class="info-divider">|</span>
-        <span class="info-item">{{ job.category }}</span>
-      </div>
+        <div class="section">
+          <h3 class="section-title">职位描述</h3>
+          <p class="section-content">{{ job.description }}</p>
+        </div>
 
-      <div class="section">
-        <h3 class="section-title">职位描述</h3>
-        <p class="section-content">{{ job.description }}</p>
-      </div>
+        <div class="section">
+          <h3 class="section-title">任职要求</h3>
+          <p class="section-content">{{ job.requirements }}</p>
+        </div>
 
-      <div class="section">
-        <h3 class="section-title">任职要求</h3>
-        <p class="section-content">{{ job.requirements }}</p>
-      </div>
-
-      <div class="apply-section">
-        <el-button type="primary" size="large" @click="showApplyForm = true">立即投递</el-button>
-      </div>
+        <div class="apply-section">
+          <el-button type="primary" size="large" @click="openApplyForm">立即投递</el-button>
+        </div>
+      </template>
+      <template v-else-if="loadError">
+        <el-empty :description="loadError">
+          <el-button type="primary" @click="fetchJob">重新加载</el-button>
+          <el-button @click="$router.push('/')">返回职位列表</el-button>
+        </el-empty>
+      </template>
     </el-card>
 
-    <el-dialog title="投递简历" v-model="showApplyForm" width="600px">
+    <el-dialog title="投递简历" v-model="showApplyForm" width="600px" :close-on-click-modal="false">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="80px">
         <el-form-item label="姓名" prop="candidateName">
           <el-input v-model="form.candidateName" placeholder="请输入姓名" />
@@ -51,7 +59,7 @@
           <el-input v-model="form.email" placeholder="请输入邮箱" />
         </el-form-item>
         <el-form-item label="学历">
-          <el-select v-model="form.education" placeholder="请选择学历">
+          <el-select v-model="form.education" placeholder="请选择学历" style="width: 100%">
             <el-option label="大专" value="大专" />
             <el-option label="本科" value="本科" />
             <el-option label="硕士" value="硕士" />
@@ -72,7 +80,7 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showApplyForm = false">取消</el-button>
+        <el-button @click="handleCancelApply">取消</el-button>
         <el-button type="primary" @click="submitApplication" :loading="submitLoading">确认投递</el-button>
       </template>
     </el-dialog>
@@ -80,20 +88,23 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { jobApi, applicationApi } from '../api'
 
 const route = useRoute()
+const refreshUnreadCount = inject('refreshUnreadCount', () => {})
 const job = ref(null)
+const loading = ref(false)
+const loadError = ref('')
 const applicationCount = ref(0)
 const showApplyForm = ref(false)
 const formRef = ref(null)
 const submitLoading = ref(false)
 
-const form = ref({
-  jobId: 0,
+const emptyForm = () => ({
+  jobId: job.value ? job.value.id : 0,
   candidateName: '',
   phone: '',
   email: '',
@@ -104,6 +115,8 @@ const form = ref({
   expectSalary: ''
 })
 
+const form = ref(emptyForm())
+
 const rules = {
   candidateName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   phone: [{ required: true, message: '请输入电话', trigger: 'blur' }],
@@ -111,15 +124,22 @@ const rules = {
 }
 
 const fetchJob = async () => {
+  loading.value = true
+  loadError.value = ''
   try {
     const res = await jobApi.get(route.params.id)
     if (res.data.code === 200) {
       job.value = res.data.data
       form.value.jobId = res.data.data.id
       fetchApplicationCount()
+    } else {
+      loadError.value = res.data.message || '职位不存在或已下架'
     }
   } catch (error) {
     console.error('获取职位详情失败:', error)
+    loadError.value = '获取职位信息失败，请检查网络或稍后重试'
+  } finally {
+    loading.value = false
   }
 }
 
@@ -134,6 +154,33 @@ const fetchApplicationCount = async () => {
   }
 }
 
+const openApplyForm = () => {
+  form.value = emptyForm()
+  if (formRef.value) formRef.value.clearValidate()
+  showApplyForm.value = true
+}
+
+const hasFormContent = () => {
+  const f = form.value
+  return !!(f.candidateName || f.phone || f.email || f.education ||
+    f.experience || f.skills || f.resume || f.expectSalary)
+}
+
+const handleCancelApply = async () => {
+  if (hasFormContent()) {
+    try {
+      await ElMessageBox.confirm('您有未提交的内容，确认取消投递吗？', '提示', {
+        type: 'warning',
+        confirmButtonText: '确认取消',
+        cancelButtonText: '继续填写'
+      })
+    } catch {
+      return
+    }
+  }
+  showApplyForm.value = false
+}
+
 const submitApplication = async () => {
   if (!formRef.value || submitLoading.value) return
   await formRef.value.validate(async (valid) => {
@@ -144,18 +191,9 @@ const submitApplication = async () => {
         if (res.data.code === 200) {
           ElMessage.success('投递成功')
           showApplyForm.value = false
-          form.value = {
-            jobId: job.value.id,
-            candidateName: '',
-            phone: '',
-            email: '',
-            education: '',
-            experience: '',
-            skills: '',
-            resume: '',
-            expectSalary: ''
-          }
+          form.value = emptyForm()
           fetchApplicationCount()
+          refreshUnreadCount()
         } else {
           ElMessage.error(res.data.message || '投递失败')
         }

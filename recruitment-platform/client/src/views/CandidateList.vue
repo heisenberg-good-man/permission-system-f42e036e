@@ -86,10 +86,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, onMounted, inject } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { User } from '@element-plus/icons-vue'
 import { applicationApi, jobApi } from '../api'
+
+const refreshUnreadCount = inject('refreshUnreadCount', () => {})
 
 const keyword = ref('')
 const statusFilter = ref('')
@@ -100,6 +102,14 @@ const loading = ref(false)
 const candidateList = ref([])
 const total = ref(0)
 const jobOptions = ref([])
+
+const STATUS_LABELS = {
+  pending: '待筛选',
+  contacted: '已沟通',
+  interviewing: '面试中',
+  offered: '已发 Offer',
+  rejected: '已拒绝'
+}
 
 const fetchCandidates = async () => {
   loading.value = true
@@ -119,6 +129,8 @@ const fetchCandidates = async () => {
         statusLoading: false
       }))
       total.value = res.data.data.total
+    } else {
+      ElMessage.error(res.data.message || '获取候选人列表失败')
     }
   } catch (error) {
     console.error('获取候选人列表失败:', error)
@@ -140,13 +152,31 @@ const fetchJobs = async () => {
 }
 
 const updateStatus = async (candidate) => {
-  if (candidate.status === candidate.newStatus || candidate.statusLoading) return
+  const targetStatus = candidate.newStatus
+  if (targetStatus === candidate.status) return
+  try {
+    await ElMessageBox.confirm(
+      `确认将「${candidate.candidateName}」的状态从「${STATUS_LABELS[candidate.status]}」改为「${STATUS_LABELS[targetStatus]}」？`,
+      '状态变更确认',
+      {
+        type: 'warning',
+        confirmButtonText: '确认变更',
+        cancelButtonText: '取消'
+      }
+    )
+  } catch {
+    candidate.newStatus = candidate.status
+    return
+  }
+
   candidate.statusLoading = true
   try {
-    const res = await applicationApi.updateStatus(candidate.id, candidate.newStatus)
+    const res = await applicationApi.updateStatus(candidate.id, targetStatus)
     if (res.data.code === 200) {
-      await fetchCandidates()
+      candidate.status = targetStatus
+      candidate.newStatus = targetStatus
       ElMessage.success('状态更新成功')
+      refreshUnreadCount()
     } else {
       ElMessage.error(res.data.message || '状态更新失败')
       candidate.newStatus = candidate.status
