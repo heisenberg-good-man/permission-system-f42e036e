@@ -113,3 +113,52 @@ AggregateError [ECONNREFUSED]:
 AggregateError [ECONNREFUSED]: 
     at internalConnectMultiple (node:net:1134:18)
     at afterConnectMultiple (node:net:1715:7)
+
+> recruitment-platform-client@1.0.0 dev
+> vite --host 127.0.0.1 --port 5173
+
+Re-optimizing dependencies because vite config has changed
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m871[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5173[22m/[39m
+[2m03:30:17[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/notifications/unread-count[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[2m03:30:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/jobs?size=100[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[2m03:30:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/applications?keyword=&status=&jobId=&page=1&size=10[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[2m03:30:48[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/notifications/unread-count[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[2m03:31:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/notifications/unread-count[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[2m03:31:48[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/notifications/unread-count[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[2m03:32:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/notifications/unread-count[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[2m03:32:48[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/notifications/unread-count[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[2m03:33:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/notifications/unread-count[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
+[2m03:33:48[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/notifications/unread-count[39m
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7)
