@@ -50,6 +50,24 @@ export const messageApi = {
   }
 }
 
+export const interviewApi = {
+  list(params) {
+    return api.get('/interviews', { params })
+  },
+  get(id) {
+    return api.get(`/interviews/${id}`)
+  },
+  listByApplication(applicationId) {
+    return api.get(`/interviews/application/${applicationId}`)
+  },
+  create(data) {
+    return api.post('/interviews', data)
+  },
+  saveFeedback(id, data) {
+    return api.put(`/interviews/${id}/feedback`, data)
+  }
+}
+
 export const statisticsApi = {
   overview() {
     return api.get('/statistics')

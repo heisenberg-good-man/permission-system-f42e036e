@@ -192,15 +192,96 @@ let messages = [
   }
 ]
 
+let interviews = [
+  {
+    id: 1,
+    applicationId: 3,
+    jobId: 2,
+    jobTitle: 'Java后端开发工程师',
+    candidateName: '王五',
+    round: 1,
+    roundName: '初试',
+    interviewer: '刘总监',
+    scheduledTime: '2024-01-18T10:00:00Z',
+    location: '现场·北京总部',
+    status: 'completed',
+    createdAt: '2024-01-15T15:30:00Z'
+  },
+  {
+    id: 2,
+    applicationId: 3,
+    jobId: 2,
+    jobTitle: 'Java后端开发工程师',
+    candidateName: '王五',
+    round: 2,
+    roundName: '复试',
+    interviewer: '陈技术官',
+    scheduledTime: '2024-01-22T14:00:00Z',
+    location: '视频会议',
+    status: 'scheduled',
+    createdAt: '2024-01-18T16:00:00Z'
+  },
+  {
+    id: 3,
+    applicationId: 2,
+    jobId: 1,
+    jobTitle: '前端开发工程师',
+    candidateName: '李四',
+    round: 1,
+    roundName: '初试',
+    interviewer: '赵前端负责人',
+    scheduledTime: '2024-01-19T09:30:00Z',
+    location: '视频会议',
+    status: 'scheduled',
+    createdAt: '2024-01-16T11:30:00Z'
+  },
+  {
+    id: 4,
+    applicationId: 4,
+    jobId: 1,
+    jobTitle: '前端开发工程师',
+    candidateName: '赵六',
+    round: 1,
+    roundName: '初试',
+    interviewer: '孙前端',
+    scheduledTime: '2024-01-14T16:30:00Z',
+    location: '视频会议',
+    status: 'completed',
+    createdAt: '2024-01-14T16:00:00Z'
+  }
+]
+
+let feedbacks = [
+  {
+    id: 1,
+    interviewId: 1,
+    applicationId: 3,
+    rating: 4,
+    strengths: 'Java 基础扎实，对 Spring Boot 原理理解透彻，分布式系统经验丰富，沟通清晰。',
+    risks: '对高并发场景下的限流方案经验略少，需后续轮次重点考察。',
+    conclusion: 'next_round',
+    comment: '建议进入复试，重点考察系统设计与高并发。',
+    interviewer: '刘总监',
+    createdAt: '2024-01-18T11:30:00Z',
+    updatedAt: '2024-01-18T11:30:00Z'
+  }
+]
+
 let jobIdCounter = 6
 let applicationIdCounter = 6
 let messageIdCounter = 4
+let interviewIdCounter = 5
+let feedbackIdCounter = 2
 
 module.exports = {
   jobs,
   applications,
   messages,
+  interviews,
+  feedbacks,
   getNextJobId: () => jobIdCounter++,
   getNextApplicationId: () => applicationIdCounter++,
-  getNextMessageId: () => messageIdCounter++
+  getNextMessageId: () => messageIdCounter++,
+  getNextInterviewId: () => interviewIdCounter++,
+  getNextFeedbackId: () => feedbackIdCounter++
 }

@@ -12,6 +12,7 @@
           <el-option label="待筛选" value="pending" />
           <el-option label="已沟通" value="contacted" />
           <el-option label="面试中" value="interviewing" />
+          <el-option label="已发 Offer" value="offered" />
           <el-option label="已拒绝" value="rejected" />
         </el-select>
       </div>
@@ -52,6 +53,51 @@
       </div>
 
       <div class="section">
+        <div class="section-head">
+          <h3 class="section-title">面试安排</h3>
+          <el-button
+            size="small"
+            type="primary"
+            @click="openArrangeDialog"
+            :disabled="isTerminalStatus"
+          >
+            安排面试
+          </el-button>
+        </div>
+        <el-table :data="interviewList" style="width: 100%" empty-text="暂无面试安排">
+          <el-table-column label="轮次" width="80">
+            <template #default="scope">{{ scope.row.roundName }}</template>
+          </el-table-column>
+          <el-table-column prop="interviewer" label="面试官" width="120" />
+          <el-table-column label="面试时间" width="180">
+            <template #default="scope">{{ formatTime(scope.row.scheduledTime) }}</template>
+          </el-table-column>
+          <el-table-column prop="location" label="地点" />
+          <el-table-column label="面试状态" width="100">
+            <template #default="scope">
+              <el-tag :type="getInterviewStatusType(scope.row.status)">
+                {{ getInterviewStatusText(scope.row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="反馈状态" width="100">
+            <template #default="scope">
+              <el-tag :type="scope.row.feedbackStatus === 'submitted' ? 'success' : 'info'">
+                {{ scope.row.feedbackStatus === 'submitted' ? '已反馈' : '待反馈' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="120">
+            <template #default="scope">
+              <el-button size="small" @click="$router.push(`/interview/${scope.row.id}`)">
+                {{ scope.row.feedbackStatus === 'submitted' ? '查看反馈' : '填写反馈' }}
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+
+      <div class="section">
         <h3 class="section-title">沟通消息</h3>
         <div class="message-list">
           <div
@@ -84,15 +130,46 @@
           </el-input>
         </div>
       </div>
+
+      <el-dialog v-model="arrangeDialogVisible" title="安排面试" width="480px">
+        <el-form :model="arrangeForm" label-width="90px">
+          <el-form-item label="面试轮次" required>
+            <el-select v-model="arrangeForm.round" placeholder="选择轮次" class="arrange-select">
+              <el-option label="初试" :value="1" />
+              <el-option label="复试" :value="2" />
+              <el-option label="终试" :value="3" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="面试官" required>
+            <el-input v-model="arrangeForm.interviewer" placeholder="请输入面试官姓名" />
+          </el-form-item>
+          <el-form-item label="面试时间" required>
+            <el-date-picker
+              v-model="arrangeForm.scheduledTime"
+              type="datetime"
+              placeholder="选择面试时间"
+              value-format="YYYY-MM-DDTHH:mm:ss"
+              class="arrange-select"
+            />
+          </el-form-item>
+          <el-form-item label="面试地点">
+            <el-input v-model="arrangeForm.location" placeholder="现场/视频会议链接等" />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <el-button @click="arrangeDialogVisible = false">取消</el-button>
+          <el-button type="primary" :loading="arrangeLoading" @click="arrangeInterview">确定安排</el-button>
+        </template>
+      </el-dialog>
     </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { applicationApi, messageApi } from '../api'
+import { applicationApi, messageApi, interviewApi } from '../api'
 
 const route = useRoute()
 const application = ref(null)
@@ -103,6 +180,21 @@ const loading = ref(false)
 const statusLoading = ref(false)
 const messageLoading = ref(false)
 
+const interviewList = ref([])
+const arrangeDialogVisible = ref(false)
+const arrangeLoading = ref(false)
+const arrangeForm = ref({
+  round: 1,
+  interviewer: '',
+  scheduledTime: '',
+  location: '视频会议'
+})
+
+const isTerminalStatus = computed(() => {
+  if (!application.value) return false
+  return application.value.status === 'rejected' || application.value.status === 'offered'
+})
+
 const fetchApplication = async () => {
   loading.value = true
   try {
@@ -111,6 +203,7 @@ const fetchApplication = async () => {
       application.value = res.data.data
       newStatus.value = res.data.data.status
       await fetchMessages()
+      await fetchInterviews()
     } else {
       ElMessage.error(res.data.message || '获取投递详情失败')
     }
@@ -182,12 +275,83 @@ const sendMessage = async () => {
   }
 }
 
+const fetchInterviews = async () => {
+  if (!application.value) return
+  try {
+    const res = await interviewApi.listByApplication(application.value.id)
+    if (res.data.code === 200) {
+      interviewList.value = res.data.data
+    }
+  } catch (error) {
+    console.error('获取面试安排失败:', error)
+  }
+}
+
+const openArrangeDialog = () => {
+  if (isTerminalStatus.value) {
+    ElMessage.warning('该候选人已淘汰或已发 Offer，不可再安排面试')
+    return
+  }
+  arrangeForm.value = {
+    round: (interviewList.value.length || 0) + 1,
+    interviewer: '',
+    scheduledTime: '',
+    location: '视频会议'
+  }
+  arrangeDialogVisible.value = true
+}
+
+const arrangeInterview = async () => {
+  if (!arrangeForm.value.interviewer.trim()) {
+    ElMessage.warning('请填写面试官')
+    return
+  }
+  if (!arrangeForm.value.scheduledTime) {
+    ElMessage.warning('请选择面试时间')
+    return
+  }
+  arrangeLoading.value = true
+  try {
+    const res = await interviewApi.create({
+      applicationId: application.value.id,
+      round: arrangeForm.value.round,
+      interviewer: arrangeForm.value.interviewer.trim(),
+      scheduledTime: arrangeForm.value.scheduledTime,
+      location: arrangeForm.value.location
+    })
+    if (res.data.code === 200) {
+      ElMessage.success('面试安排成功')
+      arrangeDialogVisible.value = false
+      await fetchInterviews()
+    } else {
+      ElMessage.error(res.data.message || '面试安排失败')
+    }
+  } catch (error) {
+    console.error('面试安排失败:', error)
+    const msg = error.response?.data?.message || '面试安排失败'
+    ElMessage.error(msg)
+  } finally {
+    arrangeLoading.value = false
+  }
+}
+
+const getInterviewStatusText = (status) => {
+  const map = { scheduled: '已安排', completed: '已完成', cancelled: '已取消' }
+  return map[status] || status
+}
+
+const getInterviewStatusType = (status) => {
+  const map = { scheduled: 'warning', completed: 'success', cancelled: 'info' }
+  return map[status] || 'info'
+}
+
 const getStatusText = (status) => {
   const map = {
     pending: '待筛选',
     contacted: '已沟通',
     interviewing: '面试中',
-    rejected: '已拒绝'
+    offered: '已发 Offer',
+    rejected: '已淘汰'
   }
   return map[status] || status
 }
@@ -197,6 +361,7 @@ const getStatusType = (status) => {
     pending: 'info',
     contacted: 'success',
     interviewing: 'warning',
+    offered: 'success',
     rejected: 'danger'
   }
   return map[status] || 'info'
@@ -232,6 +397,17 @@ onMounted(() => {
 
 .section {
   margin-bottom: 24px;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.arrange-select {
+  width: 100%;
 }
 
 .section-title {

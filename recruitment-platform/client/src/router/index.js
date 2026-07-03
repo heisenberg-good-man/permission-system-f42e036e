@@ -37,6 +37,16 @@ const routes = [
     component: () => import('../views/ApplicationDetail.vue')
   },
   {
+    path: '/interviews',
+    name: 'InterviewList',
+    component: () => import('../views/InterviewList.vue')
+  },
+  {
+    path: '/interview/:id',
+    name: 'InterviewFeedback',
+    component: () => import('../views/InterviewFeedback.vue')
+  },
+  {
     path: '/statistics',
     name: 'Statistics',
     component: () => import('../views/Statistics.vue')

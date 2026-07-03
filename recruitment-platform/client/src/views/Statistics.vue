@@ -53,6 +53,38 @@
           <div class="stat-label">已拒绝</div>
         </div>
       </el-card>
+
+      <el-card class="stat-card">
+        <div class="stat-icon offered-icon">🎉</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ statistics.offeredCount }}</div>
+          <div class="stat-label">已发 Offer</div>
+        </div>
+      </el-card>
+
+      <el-card class="stat-card">
+        <div class="stat-icon interview-icon">📅</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ statistics.interviewCount }}</div>
+          <div class="stat-label">面试安排数</div>
+        </div>
+      </el-card>
+
+      <el-card class="stat-card">
+        <div class="stat-icon feedback-icon">📝</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ statistics.feedbackCount }}</div>
+          <div class="stat-label">已反馈数</div>
+        </div>
+      </el-card>
+
+      <el-card class="stat-card">
+        <div class="stat-icon pending-feedback-icon">⏰</div>
+        <div class="stat-info">
+          <div class="stat-value">{{ statistics.pendingFeedbackCount }}</div>
+          <div class="stat-label">待反馈数</div>
+        </div>
+      </el-card>
     </div>
 
     <el-card class="chart-card">
@@ -98,6 +130,16 @@
           </div>
           <div class="bar-value">{{ statistics.rejectedCount }}</div>
         </div>
+        <div class="chart-bar">
+          <div class="bar-label">已发 Offer</div>
+          <div class="bar-track">
+            <div
+              class="bar-fill offered"
+              :style="{ width: getPercentage(statistics.offeredCount) + '%' }"
+            ></div>
+          </div>
+          <div class="bar-value">{{ statistics.offeredCount }}</div>
+        </div>
       </div>
     </el-card>
 
@@ -109,6 +151,7 @@
         <el-table-column prop="pendingCount" label="待筛选" />
         <el-table-column prop="contactedCount" label="已沟通" />
         <el-table-column prop="interviewingCount" label="面试中" />
+        <el-table-column prop="offeredCount" label="已Offer" />
         <el-table-column prop="rejectedCount" label="已拒绝" />
         <el-table-column label="操作">
           <template #default="scope">
@@ -130,7 +173,11 @@ const statistics = ref({
   pendingCount: 0,
   contactedCount: 0,
   interviewingCount: 0,
-  rejectedCount: 0
+  offeredCount: 0,
+  rejectedCount: 0,
+  interviewCount: 0,
+  feedbackCount: 0,
+  pendingFeedbackCount: 0
 })
 
 const recentJobs = ref([])
@@ -292,6 +339,10 @@ onMounted(() => {
 
 .bar-fill.rejected {
   background-color: #f56c6c;
+}
+
+.bar-fill.offered {
+  background-color: #9254de;
 }
 
 .bar-value {

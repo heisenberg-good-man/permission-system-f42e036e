@@ -7,6 +7,7 @@ const getStatusAction = (status) => {
     pending: '投递简历',
     contacted: '已沟通',
     interviewing: '面试中',
+    offered: '发 Offer',
     rejected: '已拒绝'
   }
   return map[status] || status
@@ -129,7 +130,7 @@ router.get('/:id', (req, res) => {
 
 router.put('/:id/status', (req, res) => {
   const { status } = req.body
-  const validStatuses = ['pending', 'contacted', 'interviewing', 'rejected']
+  const validStatuses = ['pending', 'contacted', 'interviewing', 'offered', 'rejected']
   
   if (!validStatuses.includes(status)) {
     return res.json({ code: 400, message: '无效的状态值' })

@@ -17,6 +17,7 @@
         <el-option label="待筛选" value="pending" />
         <el-option label="已沟通" value="contacted" />
         <el-option label="面试中" value="interviewing" />
+        <el-option label="已发 Offer" value="offered" />
         <el-option label="已拒绝" value="rejected" />
       </el-select>
       <el-select v-model="jobIdFilter" placeholder="筛选职位" clearable class="filter-select">
@@ -62,6 +63,7 @@
               <el-option label="待筛选" value="pending" />
               <el-option label="已沟通" value="contacted" />
               <el-option label="面试中" value="interviewing" />
+              <el-option label="已发 Offer" value="offered" />
               <el-option label="已拒绝" value="rejected" />
             </el-select>
           </template>
@@ -164,6 +166,7 @@ const getStatusText = (status) => {
     pending: '待筛选',
     contacted: '已沟通',
     interviewing: '面试中',
+    offered: '已发 Offer',
     rejected: '已拒绝'
   }
   return map[status] || status
@@ -174,6 +177,7 @@ const getStatusType = (status) => {
     pending: 'info',
     contacted: 'success',
     interviewing: 'warning',
+    offered: 'success',
     rejected: 'danger'
   }
   return map[status] || 'info'
