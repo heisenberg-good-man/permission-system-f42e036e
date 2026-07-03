@@ -27,12 +27,27 @@
     </div>
 
     <el-card v-loading="loading">
-      <template #empty>
+      <template v-if="loadError" #empty>
+        <div class="empty-state">
+          <el-icon size="48" color="#f56c6c">
+            <Warning />
+          </el-icon>
+          <p>加载失败：{{ loadError }}</p>
+          <div class="empty-actions">
+            <el-button type="primary" @click="fetchCandidates">重新加载</el-button>
+            <el-button @click="clearFilters">清空筛选</el-button>
+          </div>
+        </div>
+      </template>
+      <template v-else-if="candidateList.length === 0 && !loading" #empty>
         <div class="empty-state">
           <el-icon size="48">
             <User />
           </el-icon>
-          <p>暂无候选人数据</p>
+          <p>{{ hasFilter ? '没有匹配的候选人，试试换个条件？' : '暂无候选人数据' }}</p>
+          <div v-if="hasFilter" class="empty-actions">
+            <el-button type="primary" @click="clearFilters">一键清空筛选</el-button>
+          </div>
         </div>
       </template>
       <el-table :data="candidateList" style="width: 100%">
@@ -86,9 +101,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject } from 'vue'
+import { ref, computed, onMounted, inject } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { User } from '@element-plus/icons-vue'
+import { User, Warning } from '@element-plus/icons-vue'
 import { applicationApi, jobApi } from '../api'
 
 const refreshUnreadCount = inject('refreshUnreadCount', () => {})
@@ -99,9 +114,20 @@ const jobIdFilter = ref('')
 const page = ref(1)
 const size = ref(10)
 const loading = ref(false)
+const loadError = ref('')
 const candidateList = ref([])
 const total = ref(0)
 const jobOptions = ref([])
+
+const hasFilter = computed(() => !!keyword.value || !!statusFilter.value || !!jobIdFilter.value)
+
+const clearFilters = () => {
+  keyword.value = ''
+  statusFilter.value = ''
+  jobIdFilter.value = ''
+  page.value = 1
+  fetchCandidates()
+}
 
 const STATUS_LABELS = {
   pending: '待筛选',
@@ -113,6 +139,7 @@ const STATUS_LABELS = {
 
 const fetchCandidates = async () => {
   loading.value = true
+  loadError.value = ''
   try {
     const params = {
       keyword: keyword.value,
@@ -130,11 +157,11 @@ const fetchCandidates = async () => {
       }))
       total.value = res.data.data.total
     } else {
-      ElMessage.error(res.data.message || '获取候选人列表失败')
+      loadError.value = res.data.message || '获取候选人列表失败'
     }
   } catch (error) {
     console.error('获取候选人列表失败:', error)
-    ElMessage.error('获取候选人列表失败')
+    loadError.value = '网络异常，获取候选人列表失败'
   } finally {
     loading.value = false
   }
@@ -258,6 +285,13 @@ onMounted(() => {
 
 .empty-state p {
   margin-top: 12px;
+}
+
+.empty-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
 }
 
 .pagination-container {

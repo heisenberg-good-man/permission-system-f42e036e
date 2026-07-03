@@ -68,6 +68,20 @@ let jobs = [
     requirements: '熟悉测试流程和方法；有自动化测试经验优先；良好的沟通能力和问题分析能力。',
     createdAt: '2024-01-11T15:00:00Z',
     status: 'active'
+  },
+  {
+    id: 6,
+    title: '运维工程师（已关闭）',
+    company: '运维科技公司',
+    category: '技术开发',
+    salary: '12-20K',
+    location: '北京',
+    experience: '2-4年',
+    education: '本科',
+    description: '负责公司服务器、网络和基础设施的运维管理，保障系统稳定运行。',
+    requirements: '熟悉 Linux 系统运维；掌握 Shell/Python 脚本；有云平台运维经验优先。',
+    createdAt: '2024-01-08T10:00:00Z',
+    status: 'closed'
   }
 ]
 
@@ -505,7 +519,7 @@ let notifications = [
 
 let hiringRequestIdCounter = 5
 
-let jobIdCounter = 6
+let jobIdCounter = 7
 let applicationIdCounter = 6
 let messageIdCounter = 4
 let interviewIdCounter = 5

@@ -4,7 +4,10 @@
       <template v-if="job">
         <div class="detail-header">
           <div>
-            <h1 class="job-title">{{ job.title }}</h1>
+            <h1 class="job-title">
+              {{ job.title }}
+              <el-tag v-if="job.status === 'closed'" type="info" size="default" class="status-tag">已关闭</el-tag>
+            </h1>
             <span class="salary">{{ job.salary }}</span>
           </div>
           <div class="header-actions">
@@ -36,7 +39,14 @@
         </div>
 
         <div class="apply-section">
-          <el-button type="primary" size="large" @click="openApplyForm">立即投递</el-button>
+          <el-tooltip
+            v-if="job.status === 'closed'"
+            content="该职位已关闭，暂不接受新的投递"
+            placement="top"
+          >
+            <el-button type="primary" size="large" disabled>立即投递</el-button>
+          </el-tooltip>
+          <el-button v-else type="primary" size="large" @click="openApplyForm">立即投递</el-button>
         </div>
       </template>
       <template v-else-if="loadError">
@@ -281,5 +291,11 @@ onMounted(fetchJob)
   justify-content: center;
   padding-top: 20px;
   border-top: 1px solid #ebeef5;
+}
+
+.status-tag {
+  margin-left: 12px;
+  vertical-align: middle;
+  font-weight: normal;
 }
 </style>

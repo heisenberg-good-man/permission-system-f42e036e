@@ -4,7 +4,8 @@ const routes = [
   {
     path: '/',
     name: 'JobList',
-    component: () => import('../views/JobList.vue')
+    component: () => import('../views/JobList.vue'),
+    meta: { title: '职位列表' }
   },
   {
     path: '/job/:id',
@@ -60,6 +61,16 @@ const routes = [
     path: '/notifications',
     name: 'NotificationList',
     component: () => import('../views/NotificationList.vue')
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('../views/NotFound.vue'),
+    meta: {
+      code: 404,
+      title: '页面不存在',
+      desc: '您访问的页面不存在或已被移除，请检查地址是否正确，或返回首页继续浏览。'
+    }
   }
 ]
 

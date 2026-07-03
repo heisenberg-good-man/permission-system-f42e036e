@@ -48,15 +48,55 @@ router.post('/', (req, res) => {
     })
   }
 
+  // 手机号格式校验
+  const phoneRegex = /^1[3-9]\d{9}$/
+  if (!phoneRegex.test(String(phone).trim())) {
+    return res.json({
+      code: 400,
+      message: '手机号格式不正确，请输入 11 位有效手机号'
+    })
+  }
+
+  // 邮箱格式校验
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(String(email).trim())) {
+    return res.json({
+      code: 400,
+      message: '邮箱格式不正确，请输入有效邮箱地址'
+    })
+  }
+
   const job = jobs.find(j => j.id === parseInt(req.body.jobId))
   if (!job) {
     return res.json({ code: 404, message: '职位不存在' })
+  }
+
+  // 职位已关闭，不能投递
+  if (job.status === 'closed') {
+    return res.json({ code: 403, message: '该职位已关闭，暂不接受新的投递' })
+  }
+
+  // 重复投递校验：同一手机号不能重复投递同一职位（终态后 30 天内也不能重复投递）
+  const trimmedPhone = String(phone).trim()
+  const existingApplication = applications.find(
+    a => a.jobId === parseInt(jobId) && a.phone === trimmedPhone
+  )
+  if (existingApplication) {
+    // 只有终态（rejected/offered）且投递时间超过 30 天才能重新投递，这里简化为一律提示已投递
+    return res.json({
+      code: 409,
+      message: '您已投递过该职位，请勿重复投递',
+      data: { applicationId: existingApplication.id }
+    })
   }
 
   const now = new Date().toISOString()
   const newApplication = {
     id: getNextApplicationId(),
     ...req.body,
+    candidateName: candidateName.trim(),
+    phone: trimmedPhone,
+    email: email.trim(),
     jobTitle: job.title,
     status: 'pending',
     createdAt: now,
@@ -160,6 +200,22 @@ router.get('/:id', (req, res) => {
   }
 })
 
+const STATUS_FLOW = {
+  pending: ['contacted', 'rejected'],
+  contacted: ['interviewing', 'rejected'],
+  interviewing: ['offered', 'rejected'],
+  offered: [],
+  rejected: []
+}
+
+const TERMINAL_STATUSES = ['offered', 'rejected']
+
+const isForwardTransition = (from, to) => {
+  if (from === to) return false
+  const allowed = STATUS_FLOW[from] || []
+  return allowed.includes(to)
+}
+
 router.put('/:id/status', (req, res) => {
   const { status } = req.body
   const validStatuses = ['pending', 'contacted', 'interviewing', 'offered', 'rejected']
@@ -172,6 +228,28 @@ router.put('/:id/status', (req, res) => {
   if (index !== -1) {
     const application = applications[index]
     const previousStatus = application.status
+
+    // 状态相同无需变更
+    if (previousStatus === status) {
+      return res.json({ code: 400, message: '当前状态与目标状态一致，无需变更' })
+    }
+
+    // 终态不可变更
+    if (TERMINAL_STATUSES.includes(previousStatus)) {
+      return res.json({
+        code: 403,
+        message: `当前状态为「${STATUS_LABELS[previousStatus] || previousStatus}」，为终态不可再次变更`
+      })
+    }
+
+    // 状态流转校验：不允许回退
+    if (!isForwardTransition(previousStatus, status)) {
+      return res.json({
+        code: 403,
+        message: `状态不能从「${STATUS_LABELS[previousStatus] || previousStatus}」回退到「${STATUS_LABELS[status] || status}」`
+      })
+    }
+
     if (!application.timeline) {
       application.timeline = []
     }

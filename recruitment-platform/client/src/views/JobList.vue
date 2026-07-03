@@ -27,12 +27,27 @@
     </div>
 
     <div class="job-cards" v-loading="loading">
-      <template v-if="jobList.length === 0 && !loading">
+      <template v-if="loadError">
+        <div class="empty-state">
+          <el-icon size="48" color="#f56c6c">
+            <Warning />
+          </el-icon>
+          <p>加载失败：{{ loadError }}</p>
+          <div class="empty-actions">
+            <el-button type="primary" @click="fetchJobs">重新加载</el-button>
+            <el-button @click="goHome">返回首页</el-button>
+          </div>
+        </div>
+      </template>
+      <template v-else-if="jobList.length === 0 && !loading">
         <div class="empty-state">
           <el-icon size="48">
             <Briefcase />
           </el-icon>
-          <p>暂无职位数据</p>
+          <p>{{ hasFilter ? '没有匹配的职位，试试换个条件？' : '暂无职位数据' }}</p>
+          <div v-if="hasFilter" class="empty-actions">
+            <el-button type="primary" @click="clearFilters">一键清空筛选</el-button>
+          </div>
         </div>
       </template>
       <el-card
@@ -81,9 +96,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { Briefcase } from '@element-plus/icons-vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { Briefcase, Warning } from '@element-plus/icons-vue'
 import { jobApi } from '../api'
+
+const router = useRouter()
 
 const keyword = ref('')
 const category = ref('')
@@ -91,11 +109,25 @@ const location = ref('')
 const page = ref(1)
 const size = ref(10)
 const loading = ref(false)
+const loadError = ref('')
 const jobList = ref([])
 const total = ref(0)
 
+const hasFilter = computed(() => !!keyword.value || !!category.value || !!location.value)
+
+const clearFilters = () => {
+  keyword.value = ''
+  category.value = ''
+  location.value = ''
+  page.value = 1
+  fetchJobs()
+}
+
+const goHome = () => router.push('/')
+
 const fetchJobs = async () => {
   loading.value = true
+  loadError.value = ''
   try {
     const params = {
       keyword: keyword.value,
@@ -108,9 +140,12 @@ const fetchJobs = async () => {
     if (res.data.code === 200) {
       jobList.value = res.data.data.list
       total.value = res.data.data.total
+    } else {
+      loadError.value = res.data.message || '加载职位列表失败'
     }
   } catch (error) {
     console.error('获取职位列表失败:', error)
+    loadError.value = '网络异常，加载职位列表失败'
   } finally {
     loading.value = false
   }
@@ -253,5 +288,12 @@ onMounted(fetchJobs)
 
 .empty-state p {
   margin-top: 12px;
+}
+
+.empty-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
 }
 </style>

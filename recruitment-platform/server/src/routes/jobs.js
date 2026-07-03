@@ -3,12 +3,20 @@ const router = express.Router()
 const { jobs, hiringRequests, getNextJobId } = require('../data/mockData')
 
 router.get('/', (req, res) => {
-  const { keyword, category, location, salaryMin, salaryMax, page = 1, size = 10 } = req.query
-  
+  const { keyword, category, location, salaryMin, salaryMax, status, includeClosed, page = 1, size = 10 } = req.query
+
   let filtered = [...jobs]
-  
+
+  // 默认只展示 active 职位，除非显式传入 includeClosed=true
+  if (includeClosed !== 'true' && !status) {
+    filtered = filtered.filter(job => job.status === 'active')
+  }
+  if (status) {
+    filtered = filtered.filter(job => job.status === status)
+  }
+
   if (keyword) {
-    filtered = filtered.filter(job => 
+    filtered = filtered.filter(job =>
       job.title.includes(keyword) || job.company.includes(keyword)
     )
   }

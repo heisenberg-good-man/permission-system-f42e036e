@@ -2,10 +2,20 @@
   <div class="statistics">
     <div class="stats-header">
       <h2>统计概览</h2>
-      <el-button @click="refreshData">刷新数据</el-button>
+      <el-button type="primary" @click="refreshData" :loading="loading">刷新数据</el-button>
     </div>
 
-    <div class="stats-grid">
+    <el-alert
+      v-if="loadError"
+      :title="loadError"
+      type="error"
+      show-icon
+      closable
+      class="load-error-alert"
+      description="统计数据加载失败，点击右上角「刷新数据」可重试；失败操作不会影响历史数据。"
+    />
+
+    <div class="stats-grid" v-loading="loading">
       <el-card class="stat-card">
         <div class="stat-icon jobs-icon">📋</div>
         <div class="stat-info">
@@ -269,15 +279,20 @@ const statistics = ref({
 })
 
 const recentJobs = ref([])
+const loading = ref(false)
+const loadError = ref('')
 
 const fetchStatistics = async () => {
   try {
     const res = await statisticsApi.overview()
     if (res.data.code === 200) {
       statistics.value = res.data.data
+    } else {
+      throw new Error(res.data.message || '获取统计数据失败')
     }
   } catch (error) {
     console.error('获取统计数据失败:', error)
+    loadError.value = '获取统计数据失败'
   }
 }
 
@@ -317,8 +332,13 @@ const getHeadcountRate = () => {
 }
 
 const refreshData = async () => {
-  await fetchStatistics()
-  await fetchRecentJobs()
+  loading.value = true
+  loadError.value = ''
+  try {
+    await Promise.all([fetchStatistics(), fetchRecentJobs()])
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
@@ -329,6 +349,10 @@ onMounted(() => {
 <style scoped>
 .statistics {
   padding: 20px;
+}
+
+.load-error-alert {
+  margin-bottom: 20px;
 }
 
 .stats-header {

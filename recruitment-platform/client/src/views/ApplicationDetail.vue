@@ -176,6 +176,8 @@
       <template v-else-if="loadError">
         <el-empty :description="loadError">
           <el-button type="primary" @click="fetchApplication">重新加载</el-button>
+          <el-button @click="goCandidates">候选人列表</el-button>
+          <el-button @click="goJobs">职位列表</el-button>
           <el-button @click="$router.back()">返回上一页</el-button>
         </el-empty>
       </template>
@@ -185,11 +187,12 @@
 
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { applicationApi, messageApi, interviewApi } from '../api'
 
 const route = useRoute()
+const router = useRouter()
 const refreshUnreadCount = inject('refreshUnreadCount', () => {})
 const application = ref(null)
 const newStatus = ref('')
@@ -222,6 +225,9 @@ const isTerminalStatus = computed(() => {
   if (!application.value) return false
   return application.value.status === 'rejected' || application.value.status === 'offered'
 })
+
+const goCandidates = () => router.push('/candidates')
+const goJobs = () => router.push('/')
 
 const fetchApplication = async () => {
   loading.value = true
