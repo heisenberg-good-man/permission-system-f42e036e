@@ -85,7 +85,10 @@ let applications = [
     resume: '本人有3年前端开发经验，熟悉Vue和React框架，参与过多个大型项目的开发。',
     expectSalary: '20K',
     status: 'pending',
-    createdAt: '2024-01-16T09:00:00Z'
+    createdAt: '2024-01-16T09:00:00Z',
+    timeline: [
+      { status: 'pending', action: '投递简历', time: '2024-01-16T09:00:00Z' }
+    ]
   },
   {
     id: 2,
@@ -100,7 +103,11 @@ let applications = [
     resume: '4年前端开发经验，专注于Vue技术栈，有丰富的项目经验。',
     expectSalary: '22K',
     status: 'contacted',
-    createdAt: '2024-01-16T10:00:00Z'
+    createdAt: '2024-01-16T10:00:00Z',
+    timeline: [
+      { status: 'pending', action: '投递简历', time: '2024-01-16T10:00:00Z' },
+      { status: 'contacted', action: '已沟通', time: '2024-01-16T11:00:00Z' }
+    ]
   },
   {
     id: 3,
@@ -115,7 +122,12 @@ let applications = [
     resume: '5年Java开发经验，精通Spring Boot框架，有分布式系统开发经验。',
     expectSalary: '30K',
     status: 'interviewing',
-    createdAt: '2024-01-15T14:00:00Z'
+    createdAt: '2024-01-15T14:00:00Z',
+    timeline: [
+      { status: 'pending', action: '投递简历', time: '2024-01-15T14:00:00Z' },
+      { status: 'contacted', action: '已沟通', time: '2024-01-15T14:30:00Z' },
+      { status: 'interviewing', action: '面试中', time: '2024-01-15T15:00:00Z' }
+    ]
   },
   {
     id: 4,
@@ -130,7 +142,11 @@ let applications = [
     resume: '2年前端开发经验，熟悉HTML/CSS/JavaScript基础。',
     expectSalary: '15K',
     status: 'rejected',
-    createdAt: '2024-01-14T16:00:00Z'
+    createdAt: '2024-01-14T16:00:00Z',
+    timeline: [
+      { status: 'pending', action: '投递简历', time: '2024-01-14T16:00:00Z' },
+      { status: 'rejected', action: '已拒绝', time: '2024-01-14T17:00:00Z' }
+    ]
   },
   {
     id: 5,
@@ -145,7 +161,10 @@ let applications = [
     resume: '3年产品经理经验，负责过多个互联网产品的规划和迭代。',
     expectSalary: '25K',
     status: 'pending',
-    createdAt: '2024-01-17T09:00:00Z'
+    createdAt: '2024-01-17T09:00:00Z',
+    timeline: [
+      { status: 'pending', action: '投递简历', time: '2024-01-17T09:00:00Z' }
+    ]
   }
 ]
 

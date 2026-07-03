@@ -1,23 +1,27 @@
 <template>
-  <div class="application-list">
+  <div class="candidate-list">
     <div class="search-bar">
       <el-input
         v-model="keyword"
         placeholder="搜索姓名、电话、邮箱、技能"
         clearable
         class="search-input"
-        @keyup.enter="fetchApplications"
+        @keyup.enter="fetchCandidates"
       >
         <template #append>
-          <el-button @click="fetchApplications">搜索</el-button>
+          <el-button @click="fetchCandidates">搜索</el-button>
         </template>
       </el-input>
-      <el-select v-model="statusFilter" placeholder="筛选状态" clearable class="filter-select" @change="fetchApplications">
+      <el-select v-model="statusFilter" placeholder="筛选状态" clearable class="filter-select">
         <el-option label="全部" value="" />
         <el-option label="待筛选" value="pending" />
         <el-option label="已沟通" value="contacted" />
         <el-option label="面试中" value="interviewing" />
         <el-option label="已拒绝" value="rejected" />
+      </el-select>
+      <el-select v-model="jobIdFilter" placeholder="筛选职位" clearable class="filter-select">
+        <el-option label="全部" value="" />
+        <el-option v-for="job in jobOptions" :key="job.id" :label="job.title" :value="job.id" />
       </el-select>
     </div>
 
@@ -27,11 +31,12 @@
           <el-icon size="48">
             <User />
           </el-icon>
-          <p>暂无投递数据</p>
+          <p>暂无候选人数据</p>
         </div>
       </template>
-      <el-table :data="applicationList" style="width: 100%">
+      <el-table :data="candidateList" style="width: 100%">
         <el-table-column prop="candidateName" label="姓名" />
+        <el-table-column prop="jobTitle" label="投递职位" />
         <el-table-column prop="phone" label="电话" />
         <el-table-column prop="email" label="邮箱" />
         <el-table-column prop="education" label="学历" />
@@ -70,8 +75,8 @@
           :total="total"
           :page-sizes="[10, 20, 50]"
           layout="total, sizes, prev, pager, next, jumper"
-          @size-change="fetchApplications"
-          @current-change="fetchApplications"
+          @size-change="fetchCandidates"
+          @current-change="fetchCandidates"
         />
       </div>
     </el-card>
@@ -80,56 +85,68 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User } from '@element-plus/icons-vue'
-import { applicationApi } from '../api'
+import { applicationApi, jobApi } from '../api'
 
-const route = useRoute()
 const keyword = ref('')
 const statusFilter = ref('')
+const jobIdFilter = ref('')
 const page = ref(1)
 const size = ref(10)
 const loading = ref(false)
-const applicationList = ref([])
+const candidateList = ref([])
 const total = ref(0)
+const jobOptions = ref([])
 
-const fetchApplications = async () => {
+const fetchCandidates = async () => {
   loading.value = true
   try {
     const params = {
       keyword: keyword.value,
       status: statusFilter.value,
+      jobId: jobIdFilter.value,
       page: page.value,
       size: size.value
     }
-    const res = await applicationApi.list(route.params.jobId, params)
+    const res = await applicationApi.all(params)
     if (res.data.code === 200) {
-      applicationList.value = res.data.data.list.map(item => ({
+      candidateList.value = res.data.data.list.map(item => ({
         ...item,
         newStatus: item.status
       }))
       total.value = res.data.data.total
     }
   } catch (error) {
-    console.error('获取投递列表失败:', error)
-    ElMessage.error('获取投递列表失败')
+    console.error('获取候选人列表失败:', error)
+    ElMessage.error('获取候选人列表失败')
   } finally {
     loading.value = false
   }
 }
 
-const updateStatus = async (application) => {
-  if (application.status === application.newStatus) return
+const fetchJobs = async () => {
   try {
-    const res = await applicationApi.updateStatus(application.id, application.newStatus)
+    const res = await jobApi.list({ size: 100 })
     if (res.data.code === 200) {
-      application.status = application.newStatus
+      jobOptions.value = res.data.data.list
+    }
+  } catch (error) {
+    console.error('获取职位列表失败:', error)
+  }
+}
+
+const updateStatus = async (candidate) => {
+  if (candidate.status === candidate.newStatus) return
+  try {
+    const res = await applicationApi.updateStatus(candidate.id, candidate.newStatus)
+    if (res.data.code === 200) {
+      candidate.status = candidate.newStatus
       ElMessage.success('状态更新成功')
     }
   } catch (error) {
     ElMessage.error('状态更新失败')
-    application.newStatus = application.status
+    candidate.newStatus = candidate.status
   }
 }
 
@@ -158,24 +175,15 @@ const formatTime = (time) => {
   return new Date(time).toLocaleString('zh-CN')
 }
 
-onMounted(fetchApplications)
+onMounted(() => {
+  fetchJobs()
+  fetchCandidates()
+})
 </script>
 
 <style scoped>
-.application-list {
+.candidate-list {
   padding: 20px;
-}
-
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.list-header h2 {
-  font-size: 24px;
-  color: #303133;
 }
 
 .search-bar {

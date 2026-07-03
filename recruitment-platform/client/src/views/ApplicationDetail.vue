@@ -35,6 +35,23 @@
       </div>
 
       <div class="section">
+        <h3 class="section-title">处理时间线</h3>
+        <div class="timeline">
+          <div
+            v-for="(item, index) in (application.timeline || [])"
+            :key="index"
+            :class="['timeline-item', item.status]"
+          >
+            <div class="timeline-dot" :class="item.status"></div>
+            <div class="timeline-content">
+              <div class="timeline-action">{{ item.action }}</div>
+              <div class="timeline-time">{{ formatTime(item.time) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
         <h3 class="section-title">沟通消息</h3>
         <div class="message-list">
           <div
@@ -285,5 +302,76 @@ onMounted(() => {
 
 .message-input {
   margin-top: 16px;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #e4e7ed;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -20px;
+  top: 4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #409eff;
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.timeline-dot.pending {
+  background-color: #409eff;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+}
+
+.timeline-dot.contacted {
+  background-color: #67c23a;
+  box-shadow: 0 0 0 2px rgba(103, 194, 58, 0.2);
+}
+
+.timeline-dot.interviewing {
+  background-color: #e6a23c;
+  box-shadow: 0 0 0 2px rgba(230, 162, 60, 0.2);
+}
+
+.timeline-dot.rejected {
+  background-color: #f56c6c;
+  box-shadow: 0 0 0 2px rgba(245, 108, 108, 0.2);
+}
+
+.timeline-content {
+  padding-left: 16px;
+}
+
+.timeline-action {
+  font-weight: 500;
+  color: #303133;
+  margin-bottom: 4px;
+}
+
+.timeline-time {
+  font-size: 12px;
+  color: #909399;
 }
 </style>

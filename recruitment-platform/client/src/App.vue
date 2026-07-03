@@ -5,6 +5,7 @@
         <div class="logo" @click="$router.push('/')">招聘平台</div>
         <nav class="nav-menu">
           <router-link to="/" class="nav-item">职位列表</router-link>
+          <router-link to="/candidates" class="nav-item">候选人列表</router-link>
           <router-link to="/job/create" class="nav-item">发布职位</router-link>
           <router-link to="/statistics" class="nav-item">统计概览</router-link>
         </nav>

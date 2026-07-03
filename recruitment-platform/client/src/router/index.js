@@ -22,6 +22,11 @@ const routes = [
     component: () => import('../views/EditJob.vue')
   },
   {
+    path: '/candidates',
+    name: 'CandidateList',
+    component: () => import('../views/CandidateList.vue')
+  },
+  {
     path: '/applications/:jobId',
     name: 'ApplicationList',
     component: () => import('../views/ApplicationList.vue')

@@ -30,6 +30,9 @@ export const applicationApi = {
   list(jobId, params) {
     return api.get(`/applications/job/${jobId}`, { params })
   },
+  all(params) {
+    return api.get('/applications', { params })
+  },
   get(id) {
     return api.get(`/applications/${id}`)
   },
