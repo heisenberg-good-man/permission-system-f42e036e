@@ -73,7 +73,7 @@
       </el-form>
       <template #footer>
         <el-button @click="showApplyForm = false">取消</el-button>
-        <el-button type="primary" @click="submitApplication">确认投递</el-button>
+        <el-button type="primary" @click="submitApplication" :loading="submitLoading">确认投递</el-button>
       </template>
     </el-dialog>
   </div>
@@ -90,6 +90,7 @@ const job = ref(null)
 const applicationCount = ref(0)
 const showApplyForm = ref(false)
 const formRef = ref(null)
+const submitLoading = ref(false)
 
 const form = ref({
   jobId: 0,
@@ -134,9 +135,10 @@ const fetchApplicationCount = async () => {
 }
 
 const submitApplication = async () => {
-  if (!formRef.value) return
+  if (!formRef.value || submitLoading.value) return
   await formRef.value.validate(async (valid) => {
     if (valid) {
+      submitLoading.value = true
       try {
         const res = await applicationApi.create(form.value)
         if (res.data.code === 200) {
@@ -158,8 +160,11 @@ const submitApplication = async () => {
           ElMessage.error(res.data.message || '投递失败')
         }
       } catch (error) {
+        console.error('投递失败:', error)
         const msg = error.response?.data?.message || '投递失败'
         ElMessage.error(msg)
+      } finally {
+        submitLoading.value = false
       }
     }
   })

@@ -60,7 +60,7 @@
         </el-form-item>
         <el-form-item>
           <el-button @click="$router.push(`/job/${job.id}`)">返回详情</el-button>
-          <el-button type="primary" @click="submitForm">保存修改</el-button>
+          <el-button type="primary" @click="submitForm" :loading="submitLoading">保存修改</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -77,6 +77,7 @@ const route = useRoute()
 const router = useRouter()
 const formRef = ref(null)
 const job = ref(null)
+const submitLoading = ref(false)
 
 const form = ref({
   title: '',
@@ -111,17 +112,24 @@ const fetchJob = async () => {
 }
 
 const submitForm = async () => {
-  if (!formRef.value) return
+  if (!formRef.value || submitLoading.value) return
   await formRef.value.validate(async (valid) => {
     if (valid) {
+      submitLoading.value = true
       try {
         const res = await jobApi.update(job.value.id, form.value)
         if (res.data.code === 200) {
           ElMessage.success('修改成功')
           router.push(`/job/${job.value.id}`)
+        } else {
+          ElMessage.error(res.data.message || '修改失败')
         }
       } catch (error) {
-        ElMessage.error('修改失败')
+        console.error('修改失败:', error)
+        const msg = error.response?.data?.message || '修改失败'
+        ElMessage.error(msg)
+      } finally {
+        submitLoading.value = false
       }
     }
   })

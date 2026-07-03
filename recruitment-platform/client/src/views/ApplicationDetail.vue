@@ -1,6 +1,6 @@
 <template>
   <div class="application-detail">
-    <el-card v-if="application">
+    <el-card v-if="application" v-loading="loading">
       <div class="detail-header">
         <div>
           <h2>{{ application.jobTitle }}</h2>
@@ -8,7 +8,7 @@
             {{ getStatusText(application.status) }}
           </el-tag>
         </div>
-        <el-select v-model="newStatus" @change="updateStatus">
+        <el-select v-model="newStatus" @change="updateStatus" :disabled="statusLoading">
           <el-option label="待筛选" value="pending" />
           <el-option label="已沟通" value="contacted" />
           <el-option label="面试中" value="interviewing" />
@@ -76,9 +76,10 @@
             v-model="newMessage"
             placeholder="输入消息内容"
             @keyup.enter="sendMessage"
+            :disabled="messageLoading"
           >
             <template #append>
-              <el-button @click="sendMessage">发送</el-button>
+              <el-button @click="sendMessage" :loading="messageLoading">发送</el-button>
             </template>
           </el-input>
         </div>
@@ -98,17 +99,27 @@ const application = ref(null)
 const newStatus = ref('')
 const messageList = ref([])
 const newMessage = ref('')
+const loading = ref(false)
+const statusLoading = ref(false)
+const messageLoading = ref(false)
 
 const fetchApplication = async () => {
+  loading.value = true
   try {
     const res = await applicationApi.get(route.params.id)
     if (res.data.code === 200) {
       application.value = res.data.data
       newStatus.value = res.data.data.status
       await fetchMessages()
+    } else {
+      ElMessage.error(res.data.message || '获取投递详情失败')
     }
   } catch (error) {
     console.error('获取投递详情失败:', error)
+    const msg = error.response?.data?.message || '获取投递详情失败'
+    ElMessage.error(msg)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -126,20 +137,29 @@ const fetchMessages = async () => {
 
 const updateStatus = async () => {
   if (!application.value || application.value.status === newStatus.value) return
+  statusLoading.value = true
   try {
     const res = await applicationApi.updateStatus(application.value.id, newStatus.value)
     if (res.data.code === 200) {
       await fetchApplication()
       ElMessage.success('状态更新成功')
+    } else {
+      ElMessage.error(res.data.message || '状态更新失败')
+      newStatus.value = application.value.status
     }
   } catch (error) {
-    ElMessage.error('状态更新失败')
+    console.error('状态更新失败:', error)
+    const msg = error.response?.data?.message || '状态更新失败'
+    ElMessage.error(msg)
     newStatus.value = application.value.status
+  } finally {
+    statusLoading.value = false
   }
 }
 
 const sendMessage = async () => {
   if (!newMessage.value.trim()) return
+  messageLoading.value = true
   try {
     const res = await messageApi.create({
       applicationId: application.value.id,
@@ -150,9 +170,15 @@ const sendMessage = async () => {
       messageList.value.push(res.data.data)
       newMessage.value = ''
       ElMessage.success('消息发送成功')
+    } else {
+      ElMessage.error(res.data.message || '消息发送失败')
     }
   } catch (error) {
-    ElMessage.error('消息发送失败')
+    console.error('消息发送失败:', error)
+    const msg = error.response?.data?.message || '消息发送失败'
+    ElMessage.error(msg)
+  } finally {
+    messageLoading.value = false
   }
 }
 

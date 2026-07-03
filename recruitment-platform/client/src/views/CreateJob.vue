@@ -60,7 +60,7 @@
         </el-form-item>
         <el-form-item>
           <el-button @click="$router.push('/')">返回列表</el-button>
-          <el-button type="primary" @click="submitForm">发布职位</el-button>
+          <el-button type="primary" @click="submitForm" :loading="submitLoading">发布职位</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -75,6 +75,7 @@ import { jobApi } from '../api'
 
 const router = useRouter()
 const formRef = ref(null)
+const submitLoading = ref(false)
 
 const form = ref({
   title: '',
@@ -97,9 +98,10 @@ const rules = {
 }
 
 const submitForm = async () => {
-  if (!formRef.value) return
+  if (!formRef.value || submitLoading.value) return
   await formRef.value.validate(async (valid) => {
     if (valid) {
+      submitLoading.value = true
       try {
         const res = await jobApi.create(form.value)
         if (res.data.code === 200) {
@@ -109,8 +111,11 @@ const submitForm = async () => {
           ElMessage.error(res.data.message || '发布失败')
         }
       } catch (error) {
+        console.error('发布失败:', error)
         const msg = error.response?.data?.message || '发布失败'
         ElMessage.error(msg)
+      } finally {
+        submitLoading.value = false
       }
     }
   })

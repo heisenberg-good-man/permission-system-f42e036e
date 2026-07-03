@@ -53,7 +53,7 @@
         <el-table-column label="操作" width="200">
           <template #default="scope">
             <el-button size="small" @click="$router.push(`/application/${scope.row.id}`)">查看详情</el-button>
-            <el-select size="small" v-model="scope.row.newStatus" @change="updateStatus(scope.row)">
+            <el-select size="small" v-model="scope.row.newStatus" @change="updateStatus(scope.row)" :disabled="scope.row.statusLoading">
               <el-option label="待筛选" value="pending" />
               <el-option label="已沟通" value="contacted" />
               <el-option label="面试中" value="interviewing" />
@@ -107,7 +107,8 @@ const fetchApplications = async () => {
     if (res.data.code === 200) {
       applicationList.value = res.data.data.list.map(item => ({
         ...item,
-        newStatus: item.status
+        newStatus: item.status,
+        statusLoading: false
       }))
       total.value = res.data.data.total
     }
@@ -120,16 +121,24 @@ const fetchApplications = async () => {
 }
 
 const updateStatus = async (application) => {
-  if (application.status === application.newStatus) return
+  if (application.status === application.newStatus || application.statusLoading) return
+  application.statusLoading = true
   try {
     const res = await applicationApi.updateStatus(application.id, application.newStatus)
     if (res.data.code === 200) {
-      application.status = application.newStatus
+      await fetchApplications()
       ElMessage.success('状态更新成功')
+    } else {
+      ElMessage.error(res.data.message || '状态更新失败')
+      application.newStatus = application.status
     }
   } catch (error) {
-    ElMessage.error('状态更新失败')
+    console.error('状态更新失败:', error)
+    const msg = error.response?.data?.message || '状态更新失败'
+    ElMessage.error(msg)
     application.newStatus = application.status
+  } finally {
+    application.statusLoading = false
   }
 }
 
