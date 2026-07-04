@@ -12,8 +12,8 @@
           <el-button @click="fetchCandidates">搜索</el-button>
         </template>
       </el-input>
-      <el-select v-model="statusFilter" placeholder="筛选状态" clearable class="filter-select">
-        <el-option label="全部" value="" />
+      <el-select v-model="statusFilter" placeholder="筛选阶段" clearable class="filter-select">
+        <el-option label="全部阶段" value="" />
         <el-option label="待筛选" value="pending" />
         <el-option label="已沟通" value="contacted" />
         <el-option label="面试中" value="interviewing" />
@@ -21,9 +21,20 @@
         <el-option label="已淘汰" value="rejected" />
       </el-select>
       <el-select v-model="jobIdFilter" placeholder="筛选职位" clearable class="filter-select">
-        <el-option label="全部" value="" />
+        <el-option label="全部职位" value="" />
         <el-option v-for="job in jobOptions" :key="job.id" :label="job.title" :value="job.id" />
       </el-select>
+      <el-select v-model="sourceFilter" placeholder="筛选来源" clearable class="filter-select">
+        <el-option label="全部来源" value="" />
+        <el-option label="官网投递" value="官网投递" />
+        <el-option label="内推" value="内推" />
+        <el-option label="猎头推荐" value="猎头推荐" />
+        <el-option label="招聘网站" value="招聘网站" />
+        <el-option label="其他" value="其他" />
+      </el-select>
+      <el-button v-if="hasFilter" type="danger" plain @click="clearFilters">
+        清空筛选
+      </el-button>
     </div>
 
     <el-card v-loading="loading">
@@ -51,30 +62,34 @@
         </div>
       </template>
       <el-table :data="candidateList" style="width: 100%">
-        <el-table-column prop="candidateName" label="姓名" />
-        <el-table-column prop="jobTitle" label="投递职位" />
-        <el-table-column prop="phone" label="电话" />
-        <el-table-column prop="email" label="邮箱" />
-        <el-table-column prop="education" label="学历" />
-        <el-table-column prop="experience" label="工作经验" />
-        <el-table-column prop="skills" label="技能" width="200" />
-        <el-table-column prop="expectSalary" label="期望薪资" />
-        <el-table-column prop="status" label="状态">
+        <el-table-column prop="candidateName" label="姓名" width="100" />
+        <el-table-column prop="jobTitle" label="投递职位" width="160" />
+        <el-table-column prop="phone" label="电话" width="130" />
+        <el-table-column prop="source" label="来源" width="100">
           <template #default="scope">
-            <el-tag :type="getStatusType(scope.row.status)">
+            <el-tag size="small" type="info">{{ scope.row.source || '—' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="owner" label="负责人" width="100" />
+        <el-table-column prop="education" label="学历" width="80" />
+        <el-table-column prop="experience" label="工作经验" width="100" />
+        <el-table-column prop="skills" label="技能" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="status" label="阶段" width="100">
+          <template #default="scope">
+            <el-tag :type="getStatusType(scope.row.status)" size="small">
               {{ getStatusText(scope.row.status) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="投递时间" width="180">
+        <el-table-column prop="createdAt" label="投递时间" width="160">
           <template #default="scope">
             {{ formatTime(scope.row.createdAt) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="scope">
-            <el-button size="small" @click="$router.push(`/application/${scope.row.id}`)">查看详情</el-button>
-            <el-select size="small" v-model="scope.row.newStatus" @change="updateStatus(scope.row)" :disabled="scope.row.statusLoading">
+            <el-button size="small" type="primary" link @click="$router.push(`/application/${scope.row.id}`)">查看详情</el-button>
+            <el-select size="small" v-model="scope.row.newStatus" @change="updateStatus(scope.row)" :disabled="scope.row.statusLoading" style="width: 100px">
               <el-option label="待筛选" value="pending" />
               <el-option label="已沟通" value="contacted" />
               <el-option label="面试中" value="interviewing" />
@@ -111,6 +126,7 @@ const refreshUnreadCount = inject('refreshUnreadCount', () => {})
 const keyword = ref('')
 const statusFilter = ref('')
 const jobIdFilter = ref('')
+const sourceFilter = ref('')
 const page = ref(1)
 const size = ref(10)
 const loading = ref(false)
@@ -119,12 +135,13 @@ const candidateList = ref([])
 const total = ref(0)
 const jobOptions = ref([])
 
-const hasFilter = computed(() => !!keyword.value || !!statusFilter.value || !!jobIdFilter.value)
+const hasFilter = computed(() => !!keyword.value || !!statusFilter.value || !!jobIdFilter.value || !!sourceFilter.value)
 
 const clearFilters = () => {
   keyword.value = ''
   statusFilter.value = ''
   jobIdFilter.value = ''
+  sourceFilter.value = ''
   page.value = 1
   fetchCandidates()
 }
@@ -145,6 +162,7 @@ const fetchCandidates = async () => {
       keyword: keyword.value,
       status: statusFilter.value,
       jobId: jobIdFilter.value,
+      source: sourceFilter.value,
       page: page.value,
       size: size.value
     }
@@ -204,10 +222,7 @@ const updateStatus = async (candidate) => {
       candidate.newStatus = targetStatus
       ElMessage.success('状态更新成功')
       refreshUnreadCount()
-      // 若当前有筛选条件，变更后的状态可能不再匹配筛选，需重新拉取列表避免残留错误行
-      if (statusFilter.value || jobIdFilter.value || keyword.value) {
-        await fetchCandidates()
-      }
+      await fetchCandidates()
     } else {
       ElMessage.error(res.data.message || '状态更新失败')
       candidate.newStatus = candidate.status

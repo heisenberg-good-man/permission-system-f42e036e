@@ -18,6 +18,7 @@ const statisticsRouter = require('./src/routes/statistics')
 const interviewsRouter = require('./src/routes/interviews')
 const hiringRequestsRouter = require('./src/routes/hiringRequests')
 const notificationsRouter = require('./src/routes/notifications')
+const agencyRouter = require('./src/routes/agency')
 
 app.use('/api/jobs', jobsRouter)
 app.use('/api/applications', applicationsRouter)
@@ -26,6 +27,7 @@ app.use('/api/statistics', statisticsRouter)
 app.use('/api/interviews', interviewsRouter)
 app.use('/api/hiring-requests', hiringRequestsRouter)
 app.use('/api/notifications', notificationsRouter)
+app.use('/api/agency', agencyRouter)
 
 app.use((err, req, res, next) => {
   console.error('Server error:', err)

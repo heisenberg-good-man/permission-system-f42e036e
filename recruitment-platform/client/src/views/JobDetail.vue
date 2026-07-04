@@ -130,7 +130,10 @@ const form = ref(emptyForm())
 const rules = {
   candidateName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   phone: [{ required: true, message: '请输入电话', trigger: 'blur' }],
-  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }]
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '邮箱格式不正确', trigger: 'blur' }
+  ]
 }
 
 const fetchJob = async () => {
@@ -179,11 +182,15 @@ const hasFormContent = () => {
 const handleCancelApply = async () => {
   if (hasFormContent()) {
     try {
-      await ElMessageBox.confirm('您有未提交的内容，确认取消投递吗？', '提示', {
-        type: 'warning',
-        confirmButtonText: '确认取消',
-        cancelButtonText: '继续填写'
-      })
+      await ElMessageBox.confirm(
+        '您已填写部分信息，确认取消投递吗？取消后填写的内容将不会保存。',
+        '确认取消',
+        {
+          type: 'warning',
+          confirmButtonText: '确认取消',
+          cancelButtonText: '继续填写'
+        }
+      )
     } catch {
       return
     }
@@ -204,13 +211,35 @@ const submitApplication = async () => {
           form.value = emptyForm()
           fetchApplicationCount()
           refreshUnreadCount()
+          setTimeout(() => {
+            router.push(`/application/${res.data.data.id}`)
+          }, 500)
         } else {
           ElMessage.error(res.data.message || '投递失败')
         }
       } catch (error) {
         console.error('投递失败:', error)
-        const msg = error.response?.data?.message || '投递失败'
-        ElMessage.error(msg)
+        const response = error.response
+        if (response && response.data) {
+          const { code, message, data } = response.data
+          if (code === 409 && data?.applicationId) {
+            ElMessageBox.confirm(
+              `${message}，是否跳转到已投递记录页面查看详情？`,
+              '提示',
+              {
+                type: 'info',
+                confirmButtonText: '查看详情',
+                cancelButtonText: '留在当前页面'
+              }
+            ).then(() => {
+              router.push(`/application/${data.applicationId}`)
+            }).catch(() => {})
+          } else {
+            ElMessage.error(message || '投递失败')
+          }
+        } else {
+          ElMessage.error('网络异常，投递失败')
+        }
       } finally {
         submitLoading.value = false
       }

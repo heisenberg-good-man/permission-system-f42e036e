@@ -7,22 +7,34 @@
       <template v-if="application">
         <div class="detail-header">
           <div>
-            <h2>{{ application.jobTitle }}</h2>
+            <div class="header-sub">
+              <el-tag size="small" type="info">{{ application.source || '官网投递' }}</el-tag>
+              <span class="owner-text">负责人：{{ application.owner || '未分配' }}</span>
+            </div>
+            <h2>{{ application.candidateName }}</h2>
+            <p class="header-job" @click="goJobDetail" style="cursor: pointer; color: #409eff; margin: 4px 0 8px 0; font-size: 14px;">
+              投递职位：{{ application.jobTitle }} →
+            </p>
             <el-tag :type="getStatusType(application.status)" size="large">
               {{ getStatusText(application.status) }}
             </el-tag>
           </div>
-          <el-select v-model="newStatus" @change="updateStatus" :disabled="statusLoading" style="width: 160px">
-            <el-option label="待筛选" value="pending" />
-            <el-option label="已沟通" value="contacted" />
-            <el-option label="面试中" value="interviewing" />
-            <el-option label="已发 Offer" value="offered" />
-            <el-option label="已淘汰" value="rejected" />
-          </el-select>
+          <div class="header-actions">
+            <el-select v-model="newStatus" @change="updateStatus" :disabled="statusLoading" style="width: 160px">
+              <el-option label="待筛选" value="pending" />
+              <el-option label="已沟通" value="contacted" />
+              <el-option label="面试中" value="interviewing" />
+              <el-option label="已发 Offer" value="offered" />
+              <el-option label="已淘汰" value="rejected" />
+            </el-select>
+          </div>
         </div>
 
         <div class="section">
-          <h3 class="section-title">候选人信息</h3>
+          <div class="section-head">
+            <h3 class="section-title">候选人信息</h3>
+            <el-button size="small" type="primary" link @click="editOwner">更换负责人</el-button>
+          </div>
           <el-descriptions :column="2" border>
             <el-descriptions-item label="姓名">{{ application.candidateName }}</el-descriptions-item>
             <el-descriptions-item label="电话">{{ application.phone }}</el-descriptions-item>
@@ -30,13 +42,52 @@
             <el-descriptions-item label="学历">{{ application.education }}</el-descriptions-item>
             <el-descriptions-item label="工作经验">{{ application.experience }}</el-descriptions-item>
             <el-descriptions-item label="期望薪资">{{ application.expectSalary }}</el-descriptions-item>
+            <el-descriptions-item label="来源">{{ application.source || '—' }}</el-descriptions-item>
+            <el-descriptions-item label="负责人">{{ application.owner || '未分配' }}</el-descriptions-item>
             <el-descriptions-item label="技能" :span="2">{{ application.skills }}</el-descriptions-item>
           </el-descriptions>
         </div>
 
         <div class="section">
+          <div class="section-head">
+            <h3 class="section-title">简历摘要</h3>
+            <el-button size="small" type="primary" link @click="scrollToResume">查看完整简历</el-button>
+          </div>
+          <div class="resume-summary">
+            <p>{{ resumeSummary }}</p>
+          </div>
+        </div>
+
+        <div class="section" id="resume-full">
           <h3 class="section-title">简历内容</h3>
           <div class="resume-content">{{ application.resume }}</div>
+        </div>
+
+        <div class="section">
+          <div class="section-head">
+            <h3 class="section-title">招聘备注</h3>
+            <el-button size="small" type="primary" link @click="editNotes" :disabled="notesLoading">
+              {{ notesEditing ? '取消' : '编辑备注' }}
+            </el-button>
+          </div>
+          <div v-if="!notesEditing" class="notes-display">
+            <p v-if="application.notes">{{ application.notes }}</p>
+            <p v-else class="notes-empty">暂无备注，点击「编辑备注」添加</p>
+          </div>
+          <div v-else class="notes-edit">
+            <el-input
+              v-model="notesDraft"
+              type="textarea"
+              :rows="4"
+              placeholder="输入备注内容，例如候选人特点、沟通要点、待跟进事项等"
+              maxlength="500"
+              show-word-limit
+            />
+            <div class="notes-actions">
+              <el-button size="small" @click="cancelNotes">取消</el-button>
+              <el-button size="small" type="primary" :loading="notesSaving" @click="saveNotes">保存备注</el-button>
+            </div>
+          </div>
         </div>
 
         <div class="section">
@@ -186,7 +237,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject } from 'vue'
+import { ref, computed, onMounted, inject, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { applicationApi, messageApi, interviewApi } from '../api'
@@ -202,6 +253,11 @@ const loading = ref(false)
 const loadError = ref('')
 const statusLoading = ref(false)
 const messageLoading = ref(false)
+
+const notesEditing = ref(false)
+const notesDraft = ref('')
+const notesSaving = ref(false)
+const notesLoading = ref(false)
 
 const interviewList = ref([])
 const arrangeDialogVisible = ref(false)
@@ -221,6 +277,12 @@ const STATUS_LABELS = {
   rejected: '已淘汰'
 }
 
+const resumeSummary = computed(() => {
+  if (!application.value || !application.value.resume) return '暂无简历内容'
+  const text = application.value.resume
+  return text.length > 100 ? text.slice(0, 100) + '...' : text
+})
+
 const isTerminalStatus = computed(() => {
   if (!application.value) return false
   return application.value.status === 'rejected' || application.value.status === 'offered'
@@ -228,6 +290,16 @@ const isTerminalStatus = computed(() => {
 
 const goCandidates = () => router.push('/candidates')
 const goJobs = () => router.push('/')
+const goJobDetail = () => {
+  if (application.value) {
+    router.push(`/job/${application.value.jobId}`)
+  }
+}
+
+const scrollToResume = () => {
+  const el = document.getElementById('resume-full')
+  if (el) el.scrollIntoView({ behavior: 'smooth' })
+}
 
 const fetchApplication = async () => {
   loading.value = true
@@ -237,6 +309,7 @@ const fetchApplication = async () => {
     if (res.data.code === 200) {
       application.value = res.data.data
       newStatus.value = res.data.data.status
+      notesDraft.value = res.data.data.notes || ''
       await Promise.all([fetchMessages(), fetchInterviews()])
     } else {
       loadError.value = res.data.message || '获取投递详情失败'
@@ -333,6 +406,69 @@ const sendMessage = async () => {
     ElMessage.error(msg)
   } finally {
     messageLoading.value = false
+  }
+}
+
+const editNotes = () => {
+  if (notesEditing.value) {
+    cancelNotes()
+    return
+  }
+  notesDraft.value = application.value?.notes || ''
+  notesEditing.value = true
+}
+
+const cancelNotes = () => {
+  notesEditing.value = false
+  notesDraft.value = application.value?.notes || ''
+}
+
+const saveNotes = async () => {
+  if (!application.value) return
+  notesSaving.value = true
+  try {
+    const res = await applicationApi.updateNotes(application.value.id, notesDraft.value)
+    if (res.data.code === 200) {
+      application.value.notes = notesDraft.value
+      notesEditing.value = false
+      ElMessage.success('备注保存成功')
+    } else {
+      ElMessage.error(res.data.message || '保存失败')
+    }
+  } catch (error) {
+    console.error('保存备注失败:', error)
+    const msg = error.response?.data?.message || '保存备注失败'
+    ElMessage.error(msg)
+  } finally {
+    notesSaving.value = false
+  }
+}
+
+const editOwner = async () => {
+  if (!application.value) return
+  try {
+    const { value } = await ElMessageBox.prompt('请输入新负责人姓名', '更换负责人', {
+      confirmButtonText: '确认',
+      cancelButtonText: '取消',
+      inputValue: application.value.owner || '',
+      inputPlaceholder: '请输入负责人姓名',
+      inputValidator: (val) => {
+        if (!val || !val.trim()) return '负责人姓名不能为空'
+        return true
+      }
+    })
+    const res = await applicationApi.updateOwner(application.value.id, value.trim())
+    if (res.data.code === 200) {
+      application.value.owner = value.trim()
+      ElMessage.success('负责人更新成功')
+      refreshUnreadCount()
+    } else {
+      ElMessage.error(res.data.message || '更新失败')
+    }
+  } catch (e) {
+    if (e !== 'cancel') {
+      console.error('更换负责人失败:', e)
+    }
   }
 }
 
@@ -451,18 +587,81 @@ onMounted(() => {
 .detail-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.header-sub {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.owner-text {
+  font-size: 13px;
+  color: #909399;
 }
 
 .detail-header h2 {
   font-size: 24px;
   color: #303133;
-  margin-bottom: 8px;
+  margin: 4px 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .section {
   margin-bottom: 24px;
+}
+
+.resume-summary {
+  background-color: #ecf5ff;
+  padding: 16px;
+  border-radius: 8px;
+  color: #409eff;
+  line-height: 1.8;
+  border-left: 4px solid #409eff;
+}
+
+.resume-summary p {
+  margin: 0;
+}
+
+.notes-display {
+  background-color: #fdf6ec;
+  padding: 16px;
+  border-radius: 8px;
+  line-height: 1.8;
+  min-height: 60px;
+  border-left: 4px solid #e6a23c;
+}
+
+.notes-display p {
+  margin: 0;
+  color: #606266;
+}
+
+.notes-empty {
+  color: #c0c4cc !important;
+  font-style: italic;
+}
+
+.notes-edit {
+  margin-top: 8px;
+}
+
+.notes-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .section-head {

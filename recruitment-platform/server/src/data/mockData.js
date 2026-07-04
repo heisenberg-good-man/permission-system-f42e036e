@@ -98,6 +98,9 @@ let applications = [
     skills: 'Vue, React, TypeScript',
     resume: '本人有3年前端开发经验，熟悉Vue和React框架，参与过多个大型项目的开发。',
     expectSalary: '20K',
+    source: '官网投递',
+    owner: '李HR',
+    notes: '',
     status: 'pending',
     createdAt: '2024-01-16T09:00:00Z',
     timeline: [
@@ -116,6 +119,9 @@ let applications = [
     skills: 'Vue, JavaScript, CSS',
     resume: '4年前端开发经验，专注于Vue技术栈，有丰富的项目经验。',
     expectSalary: '22K',
+    source: '内推',
+    owner: '王招聘',
+    notes: '候选人沟通能力强，技术栈匹配度高，建议优先推进。',
     status: 'contacted',
     createdAt: '2024-01-16T10:00:00Z',
     timeline: [
@@ -135,6 +141,9 @@ let applications = [
     skills: 'Java, Spring Boot, MySQL',
     resume: '5年Java开发经验，精通Spring Boot框架，有分布式系统开发经验。',
     expectSalary: '30K',
+    source: '猎头推荐',
+    owner: '刘总监',
+    notes: '技术能力突出，面试反馈良好，已进入复试环节。',
     status: 'interviewing',
     createdAt: '2024-01-15T14:00:00Z',
     timeline: [
@@ -155,11 +164,14 @@ let applications = [
     skills: 'HTML, CSS, JavaScript',
     resume: '2年前端开发经验，熟悉HTML/CSS/JavaScript基础。',
     expectSalary: '15K',
+    source: '招聘网站',
+    owner: '李HR',
+    notes: '经验不足，技术栈不匹配，已淘汰。',
     status: 'rejected',
     createdAt: '2024-01-14T16:00:00Z',
     timeline: [
       { status: 'pending', action: '投递简历', time: '2024-01-14T16:00:00Z' },
-      { status: 'rejected', action: '已拒绝', time: '2024-01-14T17:00:00Z' }
+      { status: 'rejected', action: '已淘汰', time: '2024-01-14T17:00:00Z' }
     ]
   },
   {
@@ -174,6 +186,9 @@ let applications = [
     skills: '产品设计,需求分析,项目管理',
     resume: '3年产品经理经验，负责过多个互联网产品的规划和迭代。',
     expectSalary: '25K',
+    source: '官网投递',
+    owner: '钱产品总监',
+    notes: '',
     status: 'pending',
     createdAt: '2024-01-17T09:00:00Z',
     timeline: [
@@ -517,6 +532,188 @@ let notifications = [
   }
 ]
 
+// ============ 中介平台数据 ============
+// 服务人员（职业声明 + 实名认证）
+let agencyWorkers = [
+  {
+    id: 1,
+    name: '李阿姨',
+    phone: '13700137001',
+    city: '北京',
+    profession: '保姆',
+    skills: '做饭, 带孩子, 收纳整理',
+    experience: '8年',
+    description: '从事家政服务8年，擅长做饭和带孩子，性格耐心细致，有健康证。',
+    expectedSalary: '6000-8000元/月',
+    authStatus: 'verified',
+    authInfo: {
+      realName: '李秀英',
+      idCard: '11010119800101****',
+      idCardFront: 'idcard_front_1.jpg',
+      idCardBack: 'idcard_back_1.jpg'
+    },
+    authRemark: '材料齐全，审核通过',
+    authTime: '2024-01-10T10:00:00Z',
+    rating: 4.8,
+    orderCount: 12,
+    status: 'available',
+    createdAt: '2024-01-08T09:00:00Z'
+  },
+  {
+    id: 2,
+    name: '张师傅',
+    phone: '13700137002',
+    city: '北京',
+    profession: '维修工',
+    skills: '水电维修, 家电维修, 管道疏通',
+    experience: '10年',
+    description: '专业水电维修10年，承接各类家电维修、管道疏通，上门服务，价格合理。',
+    expectedSalary: '200-500元/次',
+    authStatus: 'verified',
+    authInfo: {
+      realName: '张建国',
+      idCard: '11010119750505****',
+      idCardFront: 'idcard_front_2.jpg',
+      idCardBack: 'idcard_back_2.jpg'
+    },
+    authRemark: '材料齐全，审核通过',
+    authTime: '2024-01-09T11:00:00Z',
+    rating: 4.9,
+    orderCount: 25,
+    status: 'available',
+    createdAt: '2024-01-07T14:00:00Z'
+  },
+  {
+    id: 3,
+    name: '王月嫂',
+    phone: '13700137003',
+    city: '上海',
+    profession: '月嫂',
+    skills: '新生儿护理, 产妇护理, 营养餐制作',
+    experience: '6年',
+    description: '高级月嫂，持月嫂证、催乳师证，护理过30+新生儿，专业细致。',
+    expectedSalary: '12000-15000元/月',
+    authStatus: 'verified',
+    authInfo: {
+      realName: '王丽芳',
+      idCard: '31010119820303****',
+      idCardFront: 'idcard_front_3.jpg',
+      idCardBack: 'idcard_back_3.jpg'
+    },
+    authRemark: '材料齐全，审核通过',
+    authTime: '2024-01-11T09:30:00Z',
+    rating: 4.7,
+    orderCount: 18,
+    status: 'busy',
+    createdAt: '2024-01-06T10:00:00Z'
+  },
+  {
+    id: 4,
+    name: '赵保洁',
+    phone: '13700137004',
+    city: '北京',
+    profession: '保洁',
+    skills: '日常保洁, 开荒保洁, 玻璃清洗',
+    experience: '4年',
+    description: '专业保洁4年，工具齐全，干活麻利，可上门服务。',
+    expectedSalary: '50-80元/小时',
+    authStatus: 'pending',
+    authInfo: {
+      realName: '赵小妹',
+      idCard: '11010119900101****',
+      idCardFront: 'idcard_front_4.jpg',
+      idCardBack: 'idcard_back_4.jpg'
+    },
+    authRemark: '',
+    authTime: null,
+    rating: 0,
+    orderCount: 0,
+    status: 'available',
+    createdAt: '2024-01-18T15:00:00Z'
+  },
+  {
+    id: 5,
+    name: '刘护工',
+    phone: '13700137005',
+    city: '上海',
+    profession: '护工',
+    skills: '老人护理, 医院陪护, 康复护理',
+    experience: '7年',
+    description: '专业护工7年，有护理证，擅长老人护理和医院陪护，细心负责。',
+    expectedSalary: '200-300元/天',
+    authStatus: 'unverified',
+    authInfo: null,
+    authRemark: '',
+    authTime: null,
+    rating: 0,
+    orderCount: 0,
+    status: 'available',
+    createdAt: '2024-01-19T10:00:00Z'
+  }
+]
+
+// 中介平台订单
+let agencyOrders = [
+  {
+    id: 1,
+    workerId: 1,
+    workerName: '李阿姨',
+    workerPhone: '13700137001',
+    profession: '保姆',
+    customerName: '陈先生',
+    customerPhone: '13800138001',
+    customerAddress: '北京市朝阳区XX小区5号楼',
+    description: '需要保姆照顾老人，做一日三餐，每周休息一天。',
+    scheduledTime: '2024-01-20T08:00:00Z',
+    budget: '7000元/月',
+    status: 'confirmed',
+    timeline: [
+      { status: 'pending', action: '客户下单', time: '2024-01-18T10:00:00Z' },
+      { status: 'confirmed', action: '服务人员确认接单', time: '2024-01-18T11:00:00Z' }
+    ],
+    createdAt: '2024-01-18T10:00:00Z'
+  },
+  {
+    id: 2,
+    workerId: 2,
+    workerName: '张师傅',
+    workerPhone: '13700137002',
+    profession: '维修工',
+    customerName: '林女士',
+    customerPhone: '13800138002',
+    customerAddress: '北京市海淀区YY小区3号楼',
+    description: '厨房水管漏水，需要上门维修。',
+    scheduledTime: '2024-01-21T14:00:00Z',
+    budget: '300元',
+    status: 'completed',
+    timeline: [
+      { status: 'pending', action: '客户下单', time: '2024-01-15T09:00:00Z' },
+      { status: 'confirmed', action: '服务人员确认接单', time: '2024-01-15T10:00:00Z' },
+      { status: 'in_progress', action: '开始服务', time: '2024-01-15T14:00:00Z' },
+      { status: 'completed', action: '服务完成', time: '2024-01-15T16:00:00Z' }
+    ],
+    createdAt: '2024-01-15T09:00:00Z'
+  }
+]
+
+// 中介平台订单沟通消息
+let agencyOrderMessages = [
+  {
+    id: 1,
+    orderId: 1,
+    senderType: 'customer',
+    content: '请问您下周一开始可以吗？',
+    createdAt: '2024-01-18T10:30:00Z'
+  },
+  {
+    id: 2,
+    orderId: 1,
+    senderType: 'worker',
+    content: '可以的，我下周一早上8点到。',
+    createdAt: '2024-01-18T10:45:00Z'
+  }
+]
+
 let hiringRequestIdCounter = 5
 
 let jobIdCounter = 7
@@ -525,6 +722,9 @@ let messageIdCounter = 4
 let interviewIdCounter = 5
 let feedbackIdCounter = 2
 let notificationIdCounter = 11
+let agencyWorkerIdCounter = 6
+let agencyOrderIdCounter = 3
+let agencyOrderMessageIdCounter = 3
 
 module.exports = {
   jobs,
@@ -534,11 +734,17 @@ module.exports = {
   feedbacks,
   hiringRequests,
   notifications,
+  agencyWorkers,
+  agencyOrders,
+  agencyOrderMessages,
   getNextJobId: () => jobIdCounter++,
   getNextApplicationId: () => applicationIdCounter++,
   getNextMessageId: () => messageIdCounter++,
   getNextInterviewId: () => interviewIdCounter++,
   getNextFeedbackId: () => feedbackIdCounter++,
   getNextHiringRequestId: () => hiringRequestIdCounter++,
-  getNextNotificationId: () => notificationIdCounter++
+  getNextNotificationId: () => notificationIdCounter++,
+  getNextAgencyWorkerId: () => agencyWorkerIdCounter++,
+  getNextAgencyOrderId: () => agencyOrderIdCounter++,
+  getNextAgencyOrderMessageId: () => agencyOrderMessageIdCounter++
 }

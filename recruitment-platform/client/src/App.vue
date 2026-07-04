@@ -10,6 +10,7 @@
           <router-link to="/interviews" class="nav-item">面试反馈</router-link>
           <router-link to="/hiring-requests" class="nav-item">用人需求</router-link>
           <router-link to="/statistics" class="nav-item">统计概览</router-link>
+          <router-link to="/agency" class="nav-item nav-item-agency">中介服务</router-link>
           <router-link to="/notifications" class="nav-item nav-item-notification">
             通知中心
             <span v-if="unreadCount > 0" class="unread-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
@@ -115,6 +116,11 @@ body {
 .nav-item-notification {
   display: inline-flex;
   align-items: center;
+}
+
+.nav-item-agency {
+  background-color: rgba(255, 255, 255, 0.15);
+  font-weight: 600;
 }
 
 .unread-badge {

@@ -185,10 +185,7 @@ const updateStatus = async (application) => {
       application.newStatus = targetStatus
       ElMessage.success('状态更新成功')
       refreshUnreadCount()
-      // 若当前有筛选条件，变更后的状态可能不再匹配筛选，需重新拉取列表避免残留错误行
-      if (statusFilter.value || keyword.value) {
-        await fetchApplications()
-      }
+      await fetchApplications()
     } else {
       ElMessage.error(res.data.message || '状态更新失败')
       application.newStatus = application.status

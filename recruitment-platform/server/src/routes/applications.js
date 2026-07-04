@@ -99,6 +99,9 @@ router.post('/', (req, res) => {
     phone: trimmedPhone,
     email: email.trim(),
     jobTitle: job.title,
+    source: req.body.source || '官网投递',
+    owner: req.body.owner || '李HR',
+    notes: req.body.notes || '',
     status: 'pending',
     createdAt: now,
     timeline: [{ status: 'pending', action: '投递简历', time: now }]
@@ -121,13 +124,17 @@ router.post('/', (req, res) => {
 })
 
 router.get('/job/:jobId', (req, res) => {
-  const { status, keyword, page = 1, size = 10 } = req.query
+  const { status, keyword, source, page = 1, size = 10 } = req.query
   const jobId = parseInt(req.params.jobId)
   
   let filtered = applications.filter(a => a.jobId === jobId)
   
   if (status) {
     filtered = filtered.filter(a => a.status === status)
+  }
+  
+  if (source) {
+    filtered = filtered.filter(a => a.source === source)
   }
   
   if (keyword) {
@@ -155,12 +162,16 @@ router.get('/job/:jobId', (req, res) => {
 })
 
 router.get('/', (req, res) => {
-  const { status, keyword, jobId, page = 1, size = 10 } = req.query
+  const { status, keyword, jobId, source, page = 1, size = 10 } = req.query
   
   let filtered = [...applications]
   
   if (status) {
     filtered = filtered.filter(a => a.status === status)
+  }
+  
+  if (source) {
+    filtered = filtered.filter(a => a.source === source)
   }
   
   if (keyword) {
@@ -277,6 +288,33 @@ router.put('/:id/status', (req, res) => {
 
     // 返回完整 application（含 timeline），便于前端直接刷新时间线与终态联动
     res.json({ code: 200, data: application })
+  } else {
+    res.json({ code: 404, message: '投递记录不存在' })
+  }
+})
+
+router.put('/:id/notes', (req, res) => {
+  const { notes } = req.body
+  const index = applications.findIndex(a => a.id === parseInt(req.params.id))
+  if (index !== -1) {
+    applications[index].notes = notes || ''
+    applications[index].updatedAt = new Date().toISOString()
+    res.json({ code: 200, data: { notes: applications[index].notes } })
+  } else {
+    res.json({ code: 404, message: '投递记录不存在' })
+  }
+})
+
+router.put('/:id/owner', (req, res) => {
+  const { owner } = req.body
+  if (!owner || !owner.trim()) {
+    return res.json({ code: 400, message: '负责人不能为空' })
+  }
+  const index = applications.findIndex(a => a.id === parseInt(req.params.id))
+  if (index !== -1) {
+    applications[index].owner = owner.trim()
+    applications[index].updatedAt = new Date().toISOString()
+    res.json({ code: 200, data: { owner: applications[index].owner } })
   } else {
     res.json({ code: 404, message: '投递记录不存在' })
   }

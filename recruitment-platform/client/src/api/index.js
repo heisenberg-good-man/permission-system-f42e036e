@@ -38,6 +38,12 @@ export const applicationApi = {
   },
   updateStatus(id, status) {
     return api.put(`/applications/${id}/status`, { status })
+  },
+  updateNotes(id, notes) {
+    return api.put(`/applications/${id}/notes`, { notes })
+  },
+  updateOwner(id, owner) {
+    return api.put(`/applications/${id}/owner`, { owner })
   }
 }
 
@@ -125,5 +131,44 @@ export const notificationApi = {
   },
   ignore(id) {
     return api.put(`/notifications/${id}/ignore`)
+  }
+}
+
+export const agencyApi = {
+  // 服务人员
+  listWorkers(params) {
+    return api.get('/agency/workers', { params })
+  },
+  getWorker(id) {
+    return api.get(`/agency/workers/${id}`)
+  },
+  registerWorker(data) {
+    return api.post('/agency/workers', data)
+  },
+  submitAuth(id, data) {
+    return api.put(`/agency/workers/${id}/auth`, data)
+  },
+  verifyAuth(id, data) {
+    return api.put(`/agency/workers/${id}/auth/verify`, data)
+  },
+  // 订单
+  listOrders(params) {
+    return api.get('/agency/orders', { params })
+  },
+  getOrder(id) {
+    return api.get(`/agency/orders/${id}`)
+  },
+  createOrder(data) {
+    return api.post('/agency/orders', data)
+  },
+  updateOrderStatus(id, status) {
+    return api.put(`/agency/orders/${id}/status`, { status })
+  },
+  // 订单消息
+  listOrderMessages(orderId) {
+    return api.get(`/agency/orders/${orderId}/messages`)
+  },
+  sendOrderMessage(orderId, data) {
+    return api.post(`/agency/orders/${orderId}/messages`, data)
   }
 }

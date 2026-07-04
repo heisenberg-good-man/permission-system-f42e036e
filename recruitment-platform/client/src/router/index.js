@@ -63,6 +63,34 @@ const routes = [
     component: () => import('../views/NotificationList.vue')
   },
   {
+    path: '/agency',
+    name: 'AgencyHome',
+    component: () => import('../views/agency/AgencyHome.vue'),
+    meta: { title: '中介服务' }
+  },
+  {
+    path: '/agency/register',
+    name: 'AgencyRegister',
+    component: () => import('../views/agency/AgencyRegister.vue'),
+    meta: { title: '注册服务人员' }
+  },
+  {
+    path: '/agency/worker/:id',
+    name: 'AgencyWorkerDetail',
+    component: () => import('../views/agency/AgencyWorkerDetail.vue')
+  },
+  {
+    path: '/agency/orders',
+    name: 'AgencyOrders',
+    component: () => import('../views/agency/AgencyOrders.vue'),
+    meta: { title: '服务订单' }
+  },
+  {
+    path: '/agency/order/:id',
+    name: 'AgencyOrderDetail',
+    component: () => import('../views/agency/AgencyOrderDetail.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/NotFound.vue'),
