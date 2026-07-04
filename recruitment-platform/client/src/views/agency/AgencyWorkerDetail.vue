@@ -340,6 +340,8 @@ const createOrder = async () => {
   const f = orderForm.value
   if (!f.customerName.trim()) return ElMessage.warning('请输入客户姓名')
   if (!f.customerPhone.trim()) return ElMessage.warning('请输入客户手机号')
+  const phoneRegex = /^1[3-9]\d{9}$/
+  if (!phoneRegex.test(f.customerPhone)) return ElMessage.warning('手机号格式不正确，请输入11位有效手机号')
   if (!f.customerAddress.trim()) return ElMessage.warning('请输入服务地址')
   if (!f.description.trim()) return ElMessage.warning('请输入需求描述')
   orderLoading.value = true
@@ -358,8 +360,27 @@ const createOrder = async () => {
     }
   } catch (e) {
     console.error('下单失败:', e)
-    const msg = e.response?.data?.message || '下单失败'
-    ElMessage.error(msg)
+    const response = e.response
+    if (response && response.data) {
+      const { code, message, data } = response.data
+      if (code === 409 && data?.orderId) {
+        ElMessageBox.confirm(
+          `${message}，是否跳转到已下单记录页面查看？`,
+          '提示',
+          {
+            type: 'info',
+            confirmButtonText: '查看订单',
+            cancelButtonText: '留在当前页面'
+          }
+        ).then(() => {
+          router.push(`/agency/order/${data.orderId}`)
+        }).catch(() => {})
+      } else {
+        ElMessage.error(message || '下单失败')
+      }
+    } else {
+      ElMessage.error('网络异常，下单失败')
+    }
   } finally {
     orderLoading.value = false
   }

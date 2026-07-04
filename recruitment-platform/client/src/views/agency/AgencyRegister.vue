@@ -55,7 +55,7 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :loading="submitting" @click="submit">提交注册</el-button>
-          <el-button @click="$router.push('/agency')">取消</el-button>
+          <el-button @click="handleCancel">取消</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -65,7 +65,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { agencyApi } from '../../api'
 
 const router = useRouter()
@@ -88,6 +88,30 @@ const rules = {
   profession: [{ required: true, message: '请选择职业类别', trigger: 'change' }]
 }
 
+const hasFormContent = () => {
+  const f = form.value
+  return !!(f.name || f.phone || f.city || f.profession || f.skills || f.experience || f.expectedSalary || f.description)
+}
+
+const handleCancel = async () => {
+  if (hasFormContent()) {
+    try {
+      await ElMessageBox.confirm(
+        '您已填写部分信息，确认取消注册吗？取消后填写的内容将不会保存。',
+        '确认取消',
+        {
+          type: 'warning',
+          confirmButtonText: '确认取消',
+          cancelButtonText: '继续注册'
+        }
+      )
+    } catch {
+      return
+    }
+  }
+  router.push('/agency')
+}
+
 const submit = async () => {
   if (!formRef.value) return
   await formRef.value.validate(async (valid) => {
@@ -103,8 +127,27 @@ const submit = async () => {
       }
     } catch (e) {
       console.error('注册失败:', e)
-      const msg = e.response?.data?.message || '注册失败'
-      ElMessage.error(msg)
+      const response = e.response
+      if (response && response.data) {
+        const { code, message, data } = response.data
+        if (code === 409 && data?.workerId) {
+          ElMessageBox.confirm(
+            `${message}，是否跳转到已注册账号页面查看？`,
+            '提示',
+            {
+              type: 'info',
+              confirmButtonText: '查看账号',
+              cancelButtonText: '留在当前页面'
+            }
+          ).then(() => {
+            router.push(`/agency/worker/${data.workerId}`)
+          }).catch(() => {})
+        } else {
+          ElMessage.error(message || '注册失败')
+        }
+      } else {
+        ElMessage.error('网络异常，注册失败')
+      }
     } finally {
       submitting.value = false
     }
