@@ -239,11 +239,15 @@ const fetchDetail = async () => {
 const handleCancelEdit = async () => {
   if (hasFeedbackChanged()) {
     try {
-      await ElMessageBox.confirm('您有未保存的修改，确认放弃吗？', '提示', {
-        type: 'warning',
-        confirmButtonText: '确认放弃',
-        cancelButtonText: '继续编辑'
-      })
+      await ElMessageBox.confirm(
+        '您有未保存的修改，确认放弃吗？放弃后将恢复到上次保存的状态。',
+        '确认放弃修改',
+        {
+          type: 'warning',
+          confirmButtonText: '确认放弃',
+          cancelButtonText: '继续编辑'
+        }
+      )
     } catch {
       return
     }
@@ -252,14 +256,17 @@ const handleCancelEdit = async () => {
 }
 
 const handleResetForm = async () => {
-  // 新建反馈场景下，originalForm 是进入页面时的初始值（评分 0、字段为空）
   if (hasFeedbackChanged()) {
     try {
-      await ElMessageBox.confirm('确认清空当前已填写的内容吗？', '提示', {
-        type: 'warning',
-        confirmButtonText: '确认清空',
-        cancelButtonText: '继续编辑'
-      })
+      await ElMessageBox.confirm(
+        '确认清空当前已填写的内容吗？清空后将恢复到初始状态。',
+        '确认清空',
+        {
+          type: 'warning',
+          confirmButtonText: '确认清空',
+          cancelButtonText: '继续编辑'
+        }
+      )
     } catch {
       return
     }

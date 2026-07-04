@@ -12,7 +12,7 @@
         <el-button type="primary" :disabled="summary.unreadCount === 0" @click="handleMarkAllRead">
           全部标记已读
         </el-button>
-        <el-button @click="fetchList">刷新</el-button>
+        <el-button @click="refreshAll">刷新</el-button>
       </div>
     </div>
 

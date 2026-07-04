@@ -72,7 +72,7 @@
           <el-input v-model="form.requirements" type="textarea" :rows="4" placeholder="请输入任职要求" />
         </el-form-item>
         <el-form-item>
-          <el-button @click="$router.push('/')">返回列表</el-button>
+          <el-button @click="handleCancel">返回列表</el-button>
           <el-button type="primary" @click="submitForm" :loading="submitLoading">发布职位</el-button>
         </el-form-item>
       </el-form>
@@ -83,7 +83,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { jobApi, hiringRequestApi } from '../api'
 
 const router = useRouter()
@@ -99,6 +99,7 @@ const fetchHiringRequests = async () => {
     }
   } catch (e) {
     console.error('获取用人需求列表失败:', e)
+    ElMessage.warning('获取用人需求列表失败，可继续创建职位')
   }
 }
 
@@ -121,6 +122,31 @@ const rules = {
   salary: [{ required: true, message: '请输入薪资范围', trigger: 'blur' }],
   description: [{ required: true, message: '请输入职位描述', trigger: 'blur' }],
   requirements: [{ required: true, message: '请输入任职要求', trigger: 'blur' }]
+}
+
+const hasFormContent = () => {
+  const f = form.value
+  return !!(f.title || f.company || f.hiringRequestId || f.category ||
+    f.salary || f.location || f.experience || f.education || f.description || f.requirements)
+}
+
+const handleCancel = async () => {
+  if (hasFormContent()) {
+    try {
+      await ElMessageBox.confirm(
+        '您已填写部分信息，确认取消发布吗？取消后填写的内容将不会保存。',
+        '确认取消',
+        {
+          type: 'warning',
+          confirmButtonText: '确认取消',
+          cancelButtonText: '继续编辑'
+        }
+      )
+    } catch {
+      return
+    }
+  }
+  router.push('/')
 }
 
 const submitForm = async () => {
@@ -146,6 +172,7 @@ const submitForm = async () => {
     }
   })
 }
+
 onMounted(fetchHiringRequests)
 </script>
 

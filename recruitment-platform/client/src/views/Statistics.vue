@@ -254,6 +254,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { statisticsApi, jobApi } from '../api'
 
 const statistics = ref({
@@ -336,6 +337,10 @@ const refreshData = async () => {
   loadError.value = ''
   try {
     await Promise.all([fetchStatistics(), fetchRecentJobs()])
+    ElMessage.success('数据刷新成功')
+  } catch (error) {
+    console.error('刷新数据失败:', error)
+    ElMessage.error('数据刷新失败')
   } finally {
     loading.value = false
   }
