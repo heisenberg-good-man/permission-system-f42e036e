@@ -1,7 +1,7 @@
 <template>
   <div class="interview-feedback">
     <div class="back-bar">
-      <el-button @click="$router.push('/interviews')">返回面试反馈列表</el-button>
+      <el-button @click="goBack">{{ isCandidateView ? '返回我的投递' : '返回面试反馈列表' }}</el-button>
     </div>
 
     <el-card v-loading="loading">
@@ -18,129 +18,186 @@
               {{ interview.feedbackStatus === 'submitted' ? '已反馈' : '待反馈' }}
             </el-tag>
             <el-tag v-if="application" :type="getCandidateStatusType(application.status)">
-              候选人：{{ getCandidateStatusText(application.status) }}
+              {{ isCandidateView ? '我的状态：' : '候选人：' }}{{ getCandidateStatusText(application.status) }}
             </el-tag>
           </div>
         </div>
       </div>
 
-      <div class="section">
-        <h3 class="section-title">面试信息</h3>
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="候选人">{{ interview.candidateName }}</el-descriptions-item>
-          <el-descriptions-item label="面试官">{{ interview.interviewer }}</el-descriptions-item>
-          <el-descriptions-item label="面试轮次">{{ interview.roundName }}（第 {{ interview.round }} 轮）</el-descriptions-item>
-          <el-descriptions-item label="面试时间">{{ formatTime(interview.scheduledTime) }}</el-descriptions-item>
-          <el-descriptions-item label="面试地点" :span="2">{{ interview.location }}</el-descriptions-item>
-        </el-descriptions>
-      </div>
+      <!-- 应聘方视角 -->
+      <template v-if="isCandidateView">
+        <div class="section">
+          <h3 class="section-title">面试安排</h3>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="面试官">{{ interview.interviewer }}</el-descriptions-item>
+            <el-descriptions-item label="面试时间">{{ formatTime(interview.scheduledTime) }}</el-descriptions-item>
+            <el-descriptions-item label="面试地点" :span="2">{{ interview.location }}</el-descriptions-item>
+          </el-descriptions>
+        </div>
 
-      <!-- 候选人简历摘要 -->
-      <div class="section" v-if="application">
-        <h3 class="section-title">候选人简历摘要</h3>
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="姓名">{{ application.candidateName }}</el-descriptions-item>
-          <el-descriptions-item label="学历">{{ application.education }}</el-descriptions-item>
-          <el-descriptions-item label="工作经验">{{ application.experience }}</el-descriptions-item>
-          <el-descriptions-item label="期望薪资">{{ application.expectSalary }}</el-descriptions-item>
-          <el-descriptions-item label="技能" :span="2">{{ application.skills }}</el-descriptions-item>
-          <el-descriptions-item label="简历内容" :span="2">
-            <div class="resume-content">{{ application.resume }}</div>
-          </el-descriptions-item>
-        </el-descriptions>
-      </div>
-
-      <!-- 历史沟通 -->
-      <div class="section">
-        <h3 class="section-title">历史沟通（候选人侧可见进展说明）</h3>
-        <div class="message-list" v-if="messageList.length">
-          <div
-            v-for="message in messageList"
-            :key="message.id"
-            :class="['message-item', message.senderType]"
-          >
-            <div class="message-avatar">
-              {{ message.senderType === 'recruiter' ? 'HR' : '候选人' }}
+        <!-- 面试结论（应聘方可见） -->
+        <div class="section" v-if="interview.feedback">
+          <h3 class="section-title">面试结论</h3>
+          <el-card class="conclusion-card" :class="getConclusionType(interview.feedback.conclusion)">
+            <div class="conclusion-main">
+              <el-tag :type="getConclusionType(interview.feedback.conclusion)" size="large">
+                {{ getConclusionText(interview.feedback.conclusion) }}
+              </el-tag>
             </div>
-            <div class="message-content">
-              <div class="message-header">
-                <span class="sender-name">{{ message.senderType === 'recruiter' ? '招聘方' : '候选人' }}</span>
-                <span class="send-time">{{ formatTime(message.createdAt) }}</span>
+            <div class="conclusion-msg" v-if="getConclusionMessage(interview.feedback.conclusion)">
+              <p>{{ getConclusionMessage(interview.feedback.conclusion) }}</p>
+            </div>
+          </el-card>
+        </div>
+        <div class="section" v-else>
+          <el-empty description="面试反馈尚未提交，请耐心等待面试官反馈" :image-size="60" />
+        </div>
+
+        <!-- 历史沟通 -->
+        <div class="section">
+          <h3 class="section-title">沟通记录</h3>
+          <div class="message-list" v-if="messageList.length">
+            <div
+              v-for="message in messageList"
+              :key="message.id"
+              :class="['message-item', message.senderType]"
+            >
+              <div class="message-avatar">
+                {{ message.senderType === 'recruiter' ? 'HR' : '我' }}
               </div>
-              <p>{{ message.content }}</p>
+              <div class="message-content">
+                <div class="message-header">
+                  <span class="sender-name">{{ message.senderType === 'recruiter' ? '招聘方' : '我' }}</span>
+                  <span class="send-time">{{ formatTime(message.createdAt) }}</span>
+                </div>
+                <p>{{ message.content }}</p>
+              </div>
             </div>
           </div>
+          <el-empty v-else description="暂无沟通记录" :image-size="60" />
         </div>
-        <el-empty v-else description="暂无沟通记录" :image-size="60" />
-      </div>
+      </template>
 
-      <!-- 已有评价 -->
-      <div class="section" v-if="interview.feedback">
-        <h3 class="section-title">已有评价（保存于 {{ formatTime(interview.feedback.updatedAt) }}）</h3>
-        <el-descriptions :column="1" border>
-          <el-descriptions-item label="评分">
-            <el-rate :model-value="interview.feedback.rating" disabled />
-          </el-descriptions-item>
-          <el-descriptions-item label="优势">{{ interview.feedback.strengths || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="风险点">{{ interview.feedback.risks || '—' }}</el-descriptions-item>
-          <el-descriptions-item label="结论建议">
-            <el-tag :type="getConclusionType(interview.feedback.conclusion)">
-              {{ getConclusionText(interview.feedback.conclusion) }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="备注">{{ interview.feedback.comment || '—' }}</el-descriptions-item>
-        </el-descriptions>
-      </div>
+      <!-- 招聘方视角 -->
+      <template v-else>
+        <div class="section">
+          <h3 class="section-title">面试信息</h3>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="候选人">{{ interview.candidateName }}</el-descriptions-item>
+            <el-descriptions-item label="面试官">{{ interview.interviewer }}</el-descriptions-item>
+            <el-descriptions-item label="面试轮次">{{ interview.roundName }}（第 {{ interview.round }} 轮）</el-descriptions-item>
+            <el-descriptions-item label="面试时间">{{ formatTime(interview.scheduledTime) }}</el-descriptions-item>
+            <el-descriptions-item label="面试地点" :span="2">{{ interview.location }}</el-descriptions-item>
+          </el-descriptions>
+        </div>
 
-      <!-- 反馈表单 -->
-      <div class="section">
-        <h3 class="section-title">
-          {{ interview.feedback ? '修改反馈' : '填写面试反馈' }}
-        </h3>
+        <!-- 候选人简历摘要 -->
+        <div class="section" v-if="application">
+          <h3 class="section-title">候选人简历摘要</h3>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="姓名">{{ application.candidateName }}</el-descriptions-item>
+            <el-descriptions-item label="学历">{{ application.education }}</el-descriptions-item>
+            <el-descriptions-item label="工作经验">{{ application.experience }}</el-descriptions-item>
+            <el-descriptions-item label="期望薪资">{{ application.expectSalary }}</el-descriptions-item>
+            <el-descriptions-item label="技能" :span="2">{{ application.skills }}</el-descriptions-item>
+            <el-descriptions-item label="简历内容" :span="2">
+              <div class="resume-content">{{ application.resume }}</div>
+            </el-descriptions-item>
+          </el-descriptions>
+        </div>
 
-        <el-alert
-          v-if="readOnly"
-          :title="readOnlyTip"
-          type="warning"
-          show-icon
-          :closable="false"
-          class="readonly-alert"
-        />
+        <!-- 历史沟通 -->
+        <div class="section">
+          <h3 class="section-title">历史沟通（候选人侧可见进展说明）</h3>
+          <div class="message-list" v-if="messageList.length">
+            <div
+              v-for="message in messageList"
+              :key="message.id"
+              :class="['message-item', message.senderType]"
+            >
+              <div class="message-avatar">
+                {{ message.senderType === 'recruiter' ? 'HR' : '候选人' }}
+              </div>
+              <div class="message-content">
+                <div class="message-header">
+                  <span class="sender-name">{{ message.senderType === 'recruiter' ? '招聘方' : '候选人' }}</span>
+                  <span class="send-time">{{ formatTime(message.createdAt) }}</span>
+                </div>
+                <p>{{ message.content }}</p>
+              </div>
+            </div>
+          </div>
+          <el-empty v-else description="暂无沟通记录" :image-size="60" />
+        </div>
 
-        <el-form :model="form" label-width="100px" :disabled="readOnly || saving" class="feedback-form">
-          <el-form-item label="评分" required>
-            <el-rate v-model="form.rating" :max="5" show-text :texts="['很差','较差','一般','良好','优秀']" />
-          </el-form-item>
-          <el-form-item label="优势">
-            <el-input v-model="form.strengths" type="textarea" :rows="3" placeholder="候选人表现出的优势/亮点" />
-          </el-form-item>
-          <el-form-item label="风险点">
-            <el-input v-model="form.risks" type="textarea" :rows="3" placeholder="候选人存在的风险或不足" />
-          </el-form-item>
-          <el-form-item label="结论建议" required>
-            <el-select v-model="form.conclusion" placeholder="请选择结论建议" class="conclusion-select">
-              <el-option label="进入下一轮" value="next_round" />
-              <el-option label="待定" value="pending" />
-              <el-option label="发 Offer" value="offer" />
-              <el-option label="淘汰" value="reject" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="备注">
-            <el-input v-model="form.comment" type="textarea" :rows="2" placeholder="其他说明" />
-          </el-form-item>
-          <el-form-item label="面试官">
-            <el-input v-model="form.interviewer" placeholder="默认取面试记录的面试官" />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" :loading="saving" @click="saveFeedback">
-              {{ interview.feedback ? '保存修改' : '提交反馈' }}
-            </el-button>
-            <el-button v-if="interview.feedback" @click="handleCancelEdit">取消修改</el-button>
-            <el-button v-else @click="handleResetForm">清空表单</el-button>
-            <span v-if="interview.feedback" class="form-tip">已存在反馈，提交将更新原有评价（不会产生重复记录）</span>
-          </el-form-item>
-        </el-form>
-      </div>
+        <!-- 已有评价 -->
+        <div class="section" v-if="interview.feedback">
+          <h3 class="section-title">已有评价（保存于 {{ formatTime(interview.feedback.updatedAt) }}）</h3>
+          <el-descriptions :column="1" border>
+            <el-descriptions-item label="评分">
+              <el-rate :model-value="interview.feedback.rating" disabled />
+            </el-descriptions-item>
+            <el-descriptions-item label="优势">{{ interview.feedback.strengths || '—' }}</el-descriptions-item>
+            <el-descriptions-item label="风险点">{{ interview.feedback.risks || '—' }}</el-descriptions-item>
+            <el-descriptions-item label="结论建议">
+              <el-tag :type="getConclusionType(interview.feedback.conclusion)">
+                {{ getConclusionText(interview.feedback.conclusion) }}
+              </el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="备注">{{ interview.feedback.comment || '—' }}</el-descriptions-item>
+          </el-descriptions>
+        </div>
+
+        <!-- 反馈表单 -->
+        <div class="section">
+          <h3 class="section-title">
+            {{ interview.feedback ? '修改反馈' : '填写面试反馈' }}
+          </h3>
+
+          <el-alert
+            v-if="readOnly"
+            :title="readOnlyTip"
+            type="warning"
+            show-icon
+            :closable="false"
+            class="readonly-alert"
+          />
+
+          <el-form :model="form" label-width="100px" :disabled="readOnly || saving" class="feedback-form">
+            <el-form-item label="评分" required>
+              <el-rate v-model="form.rating" :max="5" show-text :texts="['很差','较差','一般','良好','优秀']" />
+            </el-form-item>
+            <el-form-item label="优势">
+              <el-input v-model="form.strengths" type="textarea" :rows="3" placeholder="候选人表现出的优势/亮点" />
+            </el-form-item>
+            <el-form-item label="风险点">
+              <el-input v-model="form.risks" type="textarea" :rows="3" placeholder="候选人存在的风险或不足" />
+            </el-form-item>
+            <el-form-item label="结论建议" required>
+              <el-select v-model="form.conclusion" placeholder="请选择结论建议" class="conclusion-select">
+                <el-option label="进入下一轮" value="next_round" />
+                <el-option label="待定" value="pending" />
+                <el-option label="发 Offer" value="offer" />
+                <el-option label="淘汰" value="reject" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="备注">
+              <el-input v-model="form.comment" type="textarea" :rows="2" placeholder="其他说明" />
+            </el-form-item>
+            <el-form-item label="面试官">
+              <el-input v-model="form.interviewer" placeholder="默认取面试记录的面试官" />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" :loading="saving" @click="saveFeedback">
+                {{ interview.feedback ? '保存修改' : '提交反馈' }}
+              </el-button>
+              <el-button v-if="interview.feedback" @click="handleCancelEdit">取消修改</el-button>
+              <el-button v-else @click="handleResetForm">清空表单</el-button>
+              <span v-if="interview.feedback" class="form-tip">已存在反馈，提交将更新原有评价（不会产生重复记录）</span>
+            </el-form-item>
+          </el-form>
+        </div>
+      </template>
       </template>
       <template v-else-if="!loading">
         <el-empty description="面试记录不存在或已删除">
@@ -153,11 +210,12 @@
 
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { interviewApi } from '../api'
 
 const route = useRoute()
+const router = useRouter()
 const refreshUnreadCount = inject('refreshUnreadCount', () => {})
 const interview = ref(null)
 const application = ref(null)
@@ -165,6 +223,7 @@ const messageList = ref([])
 const loading = ref(false)
 const saving = ref(false)
 const originalForm = ref({})
+const isCandidateView = ref(false)
 
 const form = ref({
   rating: 0,
@@ -178,7 +237,7 @@ const form = ref({
 const readOnly = computed(() => {
   if (!application.value) return false
   const isTerminal = application.value.status === 'rejected' || application.value.status === 'offered'
-  return isTerminal
+  return isTerminal || isCandidateView.value
 })
 
 const readOnlyTip = computed(() => {
@@ -186,6 +245,29 @@ const readOnlyTip = computed(() => {
   const label = application.value.status === 'offered' ? '已发 Offer' : '已淘汰'
   return `该候选人${label}，不可再提交普通面试反馈（表单仅作查看）`
 })
+
+const goBack = () => {
+  if (isCandidateView.value) {
+    if (application.value) {
+      router.push(`/application/${application.value.id}`)
+    } else {
+      router.push('/')
+    }
+  } else {
+    router.push('/interviews')
+  }
+}
+
+const CONCLUSION_MESSAGES = {
+  next_round: '您的面试已通过，将进入下一轮，请留意后续安排。',
+  pending: '面试结果待定，HR 将进一步评估后与您联系。',
+  offer: '恭喜您通过面试，我们将向您发放 Offer。',
+  reject: '很遗憾您本次未通过面试，感谢您的参与。'
+}
+
+const getConclusionMessage = (conclusion) => {
+  return CONCLUSION_MESSAGES[conclusion] || ''
+}
 
 const hasFeedbackChanged = () => {
   const f = form.value
@@ -203,6 +285,7 @@ const fetchDetail = async () => {
       interview.value = res.data.data
       application.value = res.data.data.application
       messageList.value = res.data.data.messages || []
+      isCandidateView.value = route.query.view === 'candidate'
       const fb = res.data.data.feedback
       if (fb) {
         form.value = {
@@ -499,5 +582,56 @@ onMounted(fetchDetail)
   margin-left: 12px;
   font-size: 12px;
   color: #909399;
+}
+
+.conclusion-card {
+  text-align: center;
+  padding: 24px;
+}
+
+.conclusion-card.primary {
+  background-color: #ecf5ff;
+  border: 1px solid #b3d8ff;
+}
+
+.conclusion-card.success {
+  background-color: #f0f9eb;
+  border: 1px solid #b7eb8f;
+}
+
+.conclusion-card.warning {
+  background-color: #fdf6ec;
+  border: 1px solid #ffe58f;
+}
+
+.conclusion-card.danger {
+  background-color: #fef0f0;
+  border: 1px solid #ffccc7;
+}
+
+.conclusion-main {
+  margin-bottom: 16px;
+}
+
+.conclusion-msg p {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.conclusion-card.primary .conclusion-msg p {
+  color: #409eff;
+}
+
+.conclusion-card.success .conclusion-msg p {
+  color: #67c23a;
+}
+
+.conclusion-card.warning .conclusion-msg p {
+  color: #e6a23c;
+}
+
+.conclusion-card.danger .conclusion-msg p {
+  color: #f56c6c;
 }
 </style>
